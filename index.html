@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles.css" />
+    <title>Music Player</title>
+  </head>
+  <body>
+    <div id="player">
+      <div id="track-info">
+        <img id="album-cover" src="" alt="Album Cover" />
+        <div id="meta-info">
+          <span id="track-title">Track Title</span>
+          <span id="artist-name">Artist Name</span>
+        </div>
+      </div>
+      <input type="range" id="seek-bar" min="0" value="0" step="1" />
+      <div id="controls">
+        <button id="prev">Prev</button>
+        <button id="play">Play</button>
+        <button id="next">Next</button>
+      </div>
+    </div>
+    <script src="main.js"></script>
+  </body>
+</html>
