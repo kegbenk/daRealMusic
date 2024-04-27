@@ -73,9 +73,13 @@ body {
 }
 
 .player-ctn {
-  border-radius: 20px; /* Increased border radius for smoother edges */
-  width: 70%; /* Adjusted width for mobile */
-  padding: 20px; /* Increased padding for better spacing */
+  position: -webkit-sticky; /* For Safari */
+  position: sticky;
+  top: 0; /* Adjust this value if needed */
+  z-index: 1000; /* Higher than the playlist-ctn */
+  border-radius: 20px;
+  width: 70%;
+  padding: 20px;
   background-color: #373737;
   margin: auto;
   margin-top: 100px;
@@ -107,7 +111,8 @@ body {
   pointer-events: none;
 }
 .playlist-ctn {
-  padding-bottom: 30px; /* Increased padding for better spacing */
+  overflow-y: auto; /* Enables scrolling */
+  max-height: 1500px; /* Adjust based on your preference */
 }
 .active-track {
   background: #4d4d4d;
