@@ -33,6 +33,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const audioContext = new (window.AudioContext || window.webkitAudioContext)();
   let sourceNode;
+  let gainNode = audioContext.createGain(); // Create a gain node
+  gainNode.gain.value = 0.01; // Set gain to a very low value to minimize mic input volume
 
   // Ask for microphone access and keep the audio context active
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -40,8 +42,9 @@ document.addEventListener("DOMContentLoaded", () => {
       .getUserMedia({ audio: true })
       .then(function (stream) {
         sourceNode = audioContext.createMediaStreamSource(stream);
-        sourceNode.connect(audioContext.destination); // Connect the source to the destination
-        console.log("Microphone is active");
+        sourceNode.connect(gainNode); // Connect the source to the gain node
+        gainNode.connect(audioContext.destination); // Connect the gain node to the destination
+        console.log("Microphone is active with reduced gain");
       })
       .catch(function (err) {
         console.log("Error accessing the microphone: ", err);
