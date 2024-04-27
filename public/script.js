@@ -24,20 +24,26 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   let currentTrackIndex = 0;
-  let audio = new Audio();
+  const audio = document.createElement("audio");
+  document.body.appendChild(audio);
+
   let playButton = document.getElementById("play");
   let prevButton = document.getElementById("prev");
   let nextButton = document.getElementById("next");
 
+  // Function to load and play a track
   function loadTrack(index) {
-    let track = playlist[index];
-    audio.src = track.url;
-    audio.addEventListener("loadedmetadata", () => {
+    if (index >= 0 && index < playlist.length) {
+      currentTrackIndex = index; // Update current track index
+      let track = playlist[currentTrackIndex];
+      audio.src = track.url;
       document.getElementById("track-title").textContent = track.title;
       document.getElementById("artist-name").textContent = track.artist;
       document.getElementById("album-cover").src = track.artwork;
-    });
-    updateMediaSession(index);
+      audio.load();
+      audio.play();
+      updateMediaSession(currentTrackIndex);
+    }
   }
 
   function updateMediaSession(index) {
@@ -68,7 +74,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  playButton.addEventListener("click", () => {
+  playButton.addEventListener("click", togglePlayback);
+  nextButton.addEventListener("click", playNextTrack);
+  prevButton.addEventListener("click", playPreviousTrack);
+
+  function togglePlayback() {
     if (audio.paused) {
       audio.play();
       playButton.textContent = "Pause";
@@ -76,30 +86,23 @@ document.addEventListener("DOMContentLoaded", () => {
       audio.pause();
       playButton.textContent = "Play";
     }
-  });
-
-  nextButton.addEventListener("click", playNextTrack);
-  prevButton.addEventListener("click", playPreviousTrack);
+  }
 
   function playNextTrack() {
     if (currentTrackIndex < playlist.length - 1) {
-      currentTrackIndex++;
+      loadTrack(currentTrackIndex + 1);
     } else {
-      currentTrackIndex = 0;
+      loadTrack(0); // Loop back to the first song
     }
-    loadTrack(currentTrackIndex);
-    audio.play();
   }
 
   function playPreviousTrack() {
     if (currentTrackIndex > 0) {
-      currentTrackIndex--;
+      loadTrack(currentTrackIndex - 1);
     } else {
-      currentTrackIndex = playlist.length - 1;
+      loadTrack(playlist.length - 1); // Loop to the last song
     }
-    loadTrack(currentTrackIndex);
-    audio.play();
   }
 
-  loadTrack(currentTrackIndex); // Load the first track but do not play automatically
+  loadTrack(currentTrackIndex); // Load the first track
 });
