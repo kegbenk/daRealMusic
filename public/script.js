@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     },
     {
       url: "music/daPreacher3.0.mp3",
-      title: "100 Wayz",
+      title: "Da Preacher",
       artist: "DrainBow",
       album: "Life Under Bittherium",
       artwork: "img/album.jpg",
@@ -90,23 +90,10 @@ document.addEventListener("DOMContentLoaded", () => {
         playPreviousTrack
       );
       navigator.mediaSession.setActionHandler("nexttrack", playNextTrack);
-
-      // Handling seek forward/backward for skipping seconds
-      navigator.mediaSession.setActionHandler("seekbackward", (details) => {
-        audio.currentTime = Math.max(
-          audio.currentTime - (details.seekOffset || 10),
-          0
-        );
-      });
-
-      navigator.mediaSession.setActionHandler("seekforward", (details) => {
-        audio.currentTime = Math.min(
-          audio.currentTime + (details.seekOffset || 10),
-          audio.duration
-        );
-      });
     }
   }
+
+  audio.addEventListener("ended", playNextTrack); // Automatically play the next track when the current one ends
 
   playButton.addEventListener("click", togglePlayback);
   nextButton.addEventListener("click", playNextTrack);
