@@ -90,6 +90,21 @@ document.addEventListener("DOMContentLoaded", () => {
         playPreviousTrack
       );
       navigator.mediaSession.setActionHandler("nexttrack", playNextTrack);
+
+      // Handling seek forward/backward for skipping seconds
+      navigator.mediaSession.setActionHandler("seekbackward", (details) => {
+        audio.currentTime = Math.max(
+          audio.currentTime - (details.seekOffset || 10),
+          0
+        );
+      });
+
+      navigator.mediaSession.setActionHandler("seekforward", (details) => {
+        audio.currentTime = Math.min(
+          audio.currentTime + (details.seekOffset || 10),
+          audio.duration
+        );
+      });
     }
   }
 
