@@ -1,0 +1,159 @@
+body {
+  background-color: #2d2d2d;
+  color: #ffc266;
+  font-family: "Roboto", sans-serif;
+  font-size: 32px; /* Increased font size for better readability */
+}
+
+.controls {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  background-color: #373737;
+}
+
+#myProgress {
+  width: 90%; /* Adjusted width for mobile */
+  background-color: #d9d9f2;
+  cursor: pointer;
+  border-radius: 10px;
+  margin-left: 31px;
+}
+
+#myBar {
+  width: 0%;
+  height: 8px; /* Increased height for better visibility */
+  background-color: #ffc266;
+  border-radius: 10px;
+}
+
+.logo {
+  fill: red;
+}
+
+.btn-action {
+  cursor: pointer;
+  padding-top: 15px; /* Increased padding for easier tapping */
+  width: 40px; /* Increased width for better touch target */
+}
+
+.btn-ctn,
+.infos-ctn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.infos-ctn {
+  padding-top: 30px; /* Increased padding for better spacing */
+}
+
+.btn-ctn > div {
+  padding: 10px; /* Increased padding for better touch target */
+  margin-top: 25px; /* Increased margin for better spacing */
+  margin-bottom: 25px; /* Increased margin for better spacing */
+}
+
+.infos-ctn > div {
+  margin-bottom: 12px; /* Increased margin for better spacing */
+  color: #ffc266;
+}
+
+.first-btn {
+  margin-left: 5px; /* Increased margin for better spacing */
+}
+
+.duration {
+  margin-left: 90px; /* Increased margin for better spacing */
+}
+
+.title {
+  margin-left: 70px; /* Increased margin for better spacing */
+  width: 250px; /* Increased width for better readability */
+  text-align: center;
+}
+
+.player-ctn {
+  border-radius: 20px; /* Increased border radius for smoother edges */
+  width: 70%; /* Adjusted width for mobile */
+  padding: 20px; /* Increased padding for better spacing */
+  background-color: #373737;
+  margin: auto;
+  margin-top: 100px;
+}
+
+.playlist-track-ctn {
+  display: flex;
+  background-color: #464646;
+  margin-top: 5px; /* Increased margin for better spacing */
+  border-radius: 8px; /* Increased border radius for smoother edges */
+  cursor: pointer;
+}
+.playlist-track-ctn:last-child {
+  /*border: 1px solid #ffc266; */
+}
+
+.playlist-track-ctn > div {
+  margin: 15px; /* Increased margin for better spacing */
+}
+.playlist-info-track {
+  width: 80%;
+}
+.playlist-info-track,
+.playlist-duration {
+  padding-top: 10px; /* Increased padding for better spacing */
+  padding-bottom: 10px; /* Increased padding for better spacing */
+  color: #e9cc95;
+  font-size: 18px; /* Increased font size for better readability */
+  pointer-events: none;
+}
+.playlist-ctn {
+  padding-bottom: 30px; /* Increased padding for better spacing */
+}
+.active-track {
+  background: #4d4d4d;
+  color: #ffc266 !important;
+  font-weight: bold;
+}
+
+.active-track > .playlist-info-track,
+.active-track > .playlist-duration,
+.active-track > .playlist-btn-play {
+  color: #ffc266 !important;
+}
+
+.playlist-btn-play {
+  pointer-events: none;
+  padding-top: 10px; /* Increased padding for better spacing */
+  padding-bottom: 10px; /* Increased padding for better spacing */
+}
+.fas {
+  color: #ffc266;
+  font-size: 24px; /* Increased font size for better visibility */
+}
+
+/* Media Queries */
+@media only screen and (max-device-width: 414px) and (orientation: portrait) {
+  /* Adjust styles for larger screens */
+  .player-ctn {
+    margin-top: 50px; /* Example adjustment for larger screens */
+    width: 98%;
+  }
+
+  .playlist-track-ctn {
+    padding: 15px;
+  }
+
+  .playlist-info-track,
+  .playlist-duration {
+    font-size: 41px; /* Increased font size for better readability */
+  }
+  body {
+    font-size: 42px;
+  }
+  .btn-ctn > div {
+    padding: 37px;
+  }
+  .fas {
+    font-size: 50px;
+  }
+}
