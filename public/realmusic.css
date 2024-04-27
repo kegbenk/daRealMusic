@@ -73,16 +73,11 @@ body {
 }
 
 .player-ctn {
-  position: -webkit-sticky; /* For Safari */
+  position: -webkit-sticky; /* Safari */
   position: sticky;
-  top: 0; /* Adjust this value if needed */
-  z-index: 1000; /* Higher than the playlist-ctn */
-  border-radius: 20px;
-  width: 70%;
-  padding: 20px;
-  background-color: #373737;
-  margin: auto;
-  margin-top: 100px;
+  top: 0; /* Set the top positioning to 0 to stick it at the top of the viewport */
+  z-index: 1000; /* Higher z-index to ensure it stays on top of other content */
+  background-color: #373737; /* Optional: to ensure text readability against possible background content scrolling underneath */
 }
 
 .playlist-track-ctn {
@@ -111,8 +106,11 @@ body {
   pointer-events: none;
 }
 .playlist-ctn {
-  overflow-y: auto; /* Enables scrolling */
-  max-height: 1500px; /* Adjust based on your preference */
+  overflow-y: auto; /* Makes the playlist container scrollable */
+  max-height: calc(
+    100vh - 150px
+  ); /* Adjust the max-height accordingly to your player-ctn's height */
+  padding-top: 1rem; /* Adds some space between the player controls and the playlist */
 }
 .active-track {
   background: #4d4d4d;
@@ -142,6 +140,11 @@ body {
   .player-ctn {
     margin-top: 50px; /* Example adjustment for larger screens */
     width: 98%;
+    position: -webkit-sticky; /* Safari */
+    position: sticky;
+    top: 0; /* Set the top positioning to 0 to stick it at the top of the viewport */
+    z-index: 1000; /* Higher z-index to ensure it stays on top of other content */
+    background-color: #373737;
   }
 
   .playlist-track-ctn {
@@ -160,5 +163,12 @@ body {
   }
   .fas {
     font-size: 50px;
+  }
+  .playlist-ctn {
+    overflow-y: auto; /* Makes the playlist container scrollable */
+    max-height: calc(
+      100vh - 150px
+    ); /* Adjust the max-height accordingly to your player-ctn's height */
+    padding-top: 1rem; /* Adds some space between the player controls and the playlist */
   }
 }
