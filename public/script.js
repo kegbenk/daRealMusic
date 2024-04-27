@@ -31,7 +31,23 @@ document.addEventListener("DOMContentLoaded", () => {
   let prevButton = document.getElementById("prev");
   let nextButton = document.getElementById("next");
 
-  // Function to load and play a track
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  let sourceNode;
+
+  // Ask for microphone access and keep the audio context active
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices
+      .getUserMedia({ audio: true })
+      .then(function (stream) {
+        sourceNode = audioContext.createMediaStreamSource(stream);
+        sourceNode.connect(audioContext.destination); // Connect the source to the destination
+        console.log("Microphone is active");
+      })
+      .catch(function (err) {
+        console.log("Error accessing the microphone: ", err);
+      });
+  }
+
   function loadTrack(index) {
     if (index >= 0 && index < playlist.length) {
       currentTrackIndex = index; // Update current track index
