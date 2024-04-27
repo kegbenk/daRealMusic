@@ -33,26 +33,20 @@ document.addEventListener("DOMContentLoaded", () => {
   trackSource.connect(gainNode);
   gainNode.connect(audioContext.destination);
 
+  const volumeControl = document.createElement("input");
+  volumeControl.type = "range";
+  volumeControl.min = 0;
+  volumeControl.max = 1;
+  volumeControl.step = 0.01;
+  volumeControl.value = gainNode.gain.value;
+  volumeControl.addEventListener("input", () => {
+    gainNode.gain.value = volumeControl.value;
+  });
+  document.body.appendChild(volumeControl);
+
   let playButton = document.getElementById("play");
   let prevButton = document.getElementById("prev");
   let nextButton = document.getElementById("next");
-
-  // Set up a separate gain node for the microphone input
-  const micGainNode = audioContext.createGain();
-  micGainNode.gain.value = 0.01; // Minimize mic input volume
-
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then(function (stream) {
-        const micSource = audioContext.createMediaStreamSource(stream);
-        micSource.connect(micGainNode); // Connect mic to its own gain node
-        micGainNode.connect(audioContext.destination); // Do NOT route this to the main output
-      })
-      .catch(function (err) {
-        console.log("Error accessing the microphone: ", err);
-      });
-  }
 
   function loadTrack(index) {
     if (index >= 0 && index < playlist.length) {
