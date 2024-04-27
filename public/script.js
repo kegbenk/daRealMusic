@@ -5,33 +5,39 @@ document.addEventListener("DOMContentLoaded", () => {
       title: "100 Wayz",
       artist: "DrainBow",
       album: "Life Under Bittherium",
-      artwork: [{ src: "img/album.png", sizes: "96x96", type: "image/jpeg" }],
+      artwork: "img/album.jpg",
     },
     {
       url: "music/daPreacher3.0.mp3",
       title: "100 Wayz",
       artist: "DrainBow",
       album: "Life Under Bittherium",
-      artwork: [{ src: "img/album.png", sizes: "96x96", type: "image/jpeg" }],
+      artwork: "img/album.jpg",
     },
     {
       url: "music/song3.mp3",
       title: "Song 3",
       artist: "Artist 3",
       album: "Album 3",
-      artwork: [{ src: "img/album3.jpg", sizes: "96x96", type: "image/jpeg" }],
+      artwork: "img/album.jpg",
     },
   ];
+
   let currentTrackIndex = 0;
   let audio = new Audio();
-  loadTrack(currentTrackIndex);
+  let playButton = document.getElementById("play");
+  let prevButton = document.getElementById("prev");
+  let nextButton = document.getElementById("next");
 
   function loadTrack(index) {
     let track = playlist[index];
     audio.src = track.url;
-    audio.load(); // Ensure the audio is reloaded when track changes
+    audio.addEventListener("loadedmetadata", () => {
+      document.getElementById("track-title").textContent = track.title;
+      document.getElementById("artist-name").textContent = track.artist;
+      document.getElementById("album-cover").src = track.artwork;
+    });
     updateMediaSession(index);
-    audio.play(); // Auto-play upon track load
   }
 
   function updateMediaSession(index) {
@@ -46,37 +52,54 @@ document.addEventListener("DOMContentLoaded", () => {
 
       navigator.mediaSession.setActionHandler("play", () => {
         audio.play();
+        playButton.textContent = "Pause";
       });
 
       navigator.mediaSession.setActionHandler("pause", () => {
         audio.pause();
+        playButton.textContent = "Play";
       });
 
-      navigator.mediaSession.setActionHandler("previoustrack", () => {
-        playPreviousTrack();
-      });
-
-      navigator.mediaSession.setActionHandler("nexttrack", () => {
-        playNextTrack();
-      });
+      navigator.mediaSession.setActionHandler(
+        "previoustrack",
+        playPreviousTrack
+      );
+      navigator.mediaSession.setActionHandler("nexttrack", playNextTrack);
     }
   }
+
+  playButton.addEventListener("click", () => {
+    if (audio.paused) {
+      audio.play();
+      playButton.textContent = "Pause";
+    } else {
+      audio.pause();
+      playButton.textContent = "Play";
+    }
+  });
+
+  nextButton.addEventListener("click", playNextTrack);
+  prevButton.addEventListener("click", playPreviousTrack);
 
   function playNextTrack() {
     if (currentTrackIndex < playlist.length - 1) {
       currentTrackIndex++;
     } else {
-      currentTrackIndex = 0; // Loop back to the first song
+      currentTrackIndex = 0;
     }
     loadTrack(currentTrackIndex);
+    audio.play();
   }
 
   function playPreviousTrack() {
     if (currentTrackIndex > 0) {
       currentTrackIndex--;
     } else {
-      currentTrackIndex = playlist.length - 1; // Loop to the last song
+      currentTrackIndex = playlist.length - 1;
     }
     loadTrack(currentTrackIndex);
+    audio.play();
   }
+
+  loadTrack(currentTrackIndex); // Load the first track but do not play automatically
 });
