@@ -37,19 +37,17 @@ document.addEventListener("DOMContentLoaded", () => {
   let prevButton = document.getElementById("prev");
   let nextButton = document.getElementById("next");
 
-  // Gain node specifically for microphone input
-  let micGainNode = audioContext.createGain();
-  micGainNode.gain.value = 0.01; // Set gain to a very low value to minimize mic input volume
+  // Set up a separate gain node for the microphone input
+  const micGainNode = audioContext.createGain();
+  micGainNode.gain.value = 0.01; // Minimize mic input volume
 
-  // Ask for microphone access and keep the audio context active
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices
       .getUserMedia({ audio: true })
       .then(function (stream) {
         const micSource = audioContext.createMediaStreamSource(stream);
-        micSource.connect(micGainNode); // Connect the source to the low gain node
-        micGainNode.connect(audioContext.destination); // Connect the mic gain node to the destination
-        console.log("Microphone is active with reduced gain");
+        micSource.connect(micGainNode); // Connect mic to its own gain node
+        micGainNode.connect(audioContext.destination); // Do NOT route this to the main output
       })
       .catch(function (err) {
         console.log("Error accessing the microphone: ", err);
@@ -61,9 +59,6 @@ document.addEventListener("DOMContentLoaded", () => {
       currentTrackIndex = index;
       let track = playlist[currentTrackIndex];
       audio.src = track.url;
-      document.getElementById("track-title").textContent = track.title;
-      document.getElementById("artist-name").textContent = track.artist;
-      document.getElementById("album-cover").src = track.artwork;
       audio.load();
       audio.play();
       updateMediaSession(currentTrackIndex);
