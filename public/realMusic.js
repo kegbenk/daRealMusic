@@ -259,47 +259,10 @@ function getClickedElement(event) {
   }
 }
 
-function createMediaStreamSource() {
-  console.log("oh hai");
-  navigator.mediaDevices
-    .getUserMedia({ audio: true })
-    .then(function (stream) {
-      var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      var source = audioCtx.createMediaStreamSource(stream);
-      // Now you have `source` representing the microphone input.
-      // You can connect it to audio nodes or process it as needed.
-    })
-    .catch(function (err) {
-      console.error("Error accessing microphone: ", err);
-    });
-}
-
-// Function to request microphone permission
-function requestMicrophonePermission() {
-  navigator.mediaDevices
-    .getUserMedia({ audio: true })
-    .then(function (stream) {
-      // Permission granted, stream can be used or discarded
-      stream.getTracks().forEach(function (track) {
-        track.stop();
-      });
-    })
-    .catch(function (err) {
-      console.error("Error requesting microphone permission: ", err);
-    });
-}
-
-// Call requestMicrophonePermission when needed, e.g., on user interaction
-document.addEventListener("click", function () {
-  requestMicrophonePermission();
-});
-
 document.querySelector("#source-audio").src = listAudio[indexAudio].file;
 document.querySelector(".title").innerHTML = listAudio[indexAudio].name;
 
 var currentAudio = document.getElementById("myAudio");
-
-createMediaStreamSource();
 
 currentAudio.load();
 
