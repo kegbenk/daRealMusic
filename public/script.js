@@ -27,35 +27,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const audio = document.createElement("audio");
   document.body.appendChild(audio);
 
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const track = audioContext.createMediaElementSource(audio);
+  const gainNode = audioContext.createGain();
+  track.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+
   let playButton = document.getElementById("play");
   let prevButton = document.getElementById("prev");
   let nextButton = document.getElementById("next");
 
-  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  let sourceNode;
-
-  // Ask for microphone access and keep the audio context active
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then(function (stream) {
-        sourceNode = audioContext.createMediaStreamSource(stream);
-        sourceNode.connect(audioContext.destination); // Connect the source to the destination
-        console.log("Microphone is active");
-      })
-      .catch(function (err) {
-        console.log("Error accessing the microphone: ", err);
-      });
-  }
-
   function loadTrack(index) {
     if (index >= 0 && index < playlist.length) {
-      currentTrackIndex = index; // Update current track index
+      currentTrackIndex = index;
       let track = playlist[currentTrackIndex];
       audio.src = track.url;
-      document.getElementById("track-title").textContent = track.title;
-      document.getElementById("artist-name").textContent = track.artist;
-      document.getElementById("album-cover").src = track.artwork;
       audio.load();
       audio.play();
       updateMediaSession(currentTrackIndex);
@@ -90,35 +76,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  playButton.addEventListener("click", togglePlayback);
-  nextButton.addEventListener("click", playNextTrack);
-  prevButton.addEventListener("click", playPreviousTrack);
-
-  function togglePlayback() {
-    if (audio.paused) {
-      audio.play();
-      playButton.textContent = "Pause";
-    } else {
-      audio.pause();
-      playButton.textContent = "Play";
-    }
+  // Volume control
+  function setVolume(level) {
+    gainNode.gain.value = level;
   }
 
-  function playNextTrack() {
-    if (currentTrackIndex < playlist.length - 1) {
-      loadTrack(currentTrackIndex + 1);
-    } else {
-      loadTrack(0); // Loop back to the first song
-    }
-  }
-
-  function playPreviousTrack() {
-    if (currentTrackIndex > 0) {
-      loadTrack(currentTrackIndex - 1);
-    } else {
-      loadTrack(playlist.length - 1); // Loop to the last song
-    }
-  }
+  // Example: In-app control for volume (slider)
+  const volumeControl = document.createElement("input");
+  volumeControl.type = "range";
+  volumeControl.min = 0;
+  volumeControl.max = 1;
+  volumeControl.step = 0.01;
+  volumeControl.value = gainNode.gain.value;
+  volumeControl.addEventListener("input", () => {
+    setVolume(parseFloat(volumeControl.value));
+  });
+  document.body.appendChild(volumeControl);
 
   loadTrack(currentTrackIndex); // Load the first track
 });
