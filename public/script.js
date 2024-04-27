@@ -27,23 +27,28 @@ document.addEventListener("DOMContentLoaded", () => {
   const audio = document.createElement("audio");
   document.body.appendChild(audio);
 
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const trackSource = audioContext.createMediaElementSource(audio);
+  const gainNode = audioContext.createGain();
+  trackSource.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+
   let playButton = document.getElementById("play");
   let prevButton = document.getElementById("prev");
   let nextButton = document.getElementById("next");
 
-  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  let sourceNode;
-  let gainNode = audioContext.createGain(); // Create a gain node
-  gainNode.gain.value = 0.01; // Set gain to a very low value to minimize mic input volume
+  // Gain node specifically for microphone input
+  let micGainNode = audioContext.createGain();
+  micGainNode.gain.value = 0.01; // Set gain to a very low value to minimize mic input volume
 
   // Ask for microphone access and keep the audio context active
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices
       .getUserMedia({ audio: true })
       .then(function (stream) {
-        sourceNode = audioContext.createMediaStreamSource(stream);
-        sourceNode.connect(gainNode); // Connect the source to the gain node
-        gainNode.connect(audioContext.destination); // Connect the gain node to the destination
+        const micSource = audioContext.createMediaStreamSource(stream);
+        micSource.connect(micGainNode); // Connect the source to the low gain node
+        micGainNode.connect(audioContext.destination); // Connect the mic gain node to the destination
         console.log("Microphone is active with reduced gain");
       })
       .catch(function (err) {
@@ -53,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function loadTrack(index) {
     if (index >= 0 && index < playlist.length) {
-      currentTrackIndex = index; // Update current track index
+      currentTrackIndex = index;
       let track = playlist[currentTrackIndex];
       audio.src = track.url;
       document.getElementById("track-title").textContent = track.title;
@@ -93,7 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  audio.addEventListener("ended", playNextTrack); // Automatically play the next track when the current one ends
+  audio.addEventListener("ended", playNextTrack);
 
   playButton.addEventListener("click", togglePlayback);
   nextButton.addEventListener("click", playNextTrack);
