@@ -30,33 +30,38 @@ function createTrackItem(index, name, duration) {
 
 var listAudio = [
   {
+    name: "GARTARZ",
+    file: "music/GARTARZjune.mp3",
+    duration: "Unknown",
+  },
+  {
     name: "Lee",
     file: "music/LeeNew.mp3",
     duration: "01:42",
   },
   {
-    name: "Mighty Long",
-    file: "music/marylandMightyLong.mp3",
+    name: "100Ways",
+    file: "music/100Ways2020.1.6.mp3",
     duration: "Unknown",
   },
   {
-    name: "theLowest8.23",
+    name: "AbooATee1",
+    file: "music/AbooATee1.mp3",
+    duration: "Unknown",
+  },
+  {
+    name: "theLowest",
     file: "music/theLowest8.23.mp3",
     duration: "01:42",
   },
   {
-    name: "AnnasSong1d",
+    name: "AnnasSong",
     file: "music/AnnasSong1d.mp3",
     duration: "Unknown",
   },
   {
-    name: "daPreacher3.0",
+    name: "daPreacher",
     file: "music/daPreacher3.0.mp3",
-    duration: "Unknown",
-  },
-  {
-    name: "100waysDec",
-    file: "music/100waysDec.mp3",
     duration: "Unknown",
   },
   {
@@ -70,33 +75,23 @@ var listAudio = [
     duration: "Unknown",
   },
   {
-    name: "USAmax2oct",
+    name: "USA",
     file: "music/USAmax2oct.mp3",
     duration: "Unknown",
   },
   {
-    name: "theEndIsTheBeginning3.2",
+    name: "theEndIsTheBeginning",
     file: "music/theEndIsTheBeginning3.2.mp3",
     duration: "Unknown",
   },
   { name: "JBrown", file: "music/JBrown.mp3", duration: "Unknown" },
   {
-    name: "01 Hip Hop",
+    name: "Hip Hop",
     file: "music/01 Hip Hop.mp3",
     duration: "Unknown",
   },
   { name: "scratch2", file: "music/scratch2.mp3", duration: "Unknown" },
-  {
-    name: "100Ways2020.1.6",
-    file: "music/100Ways2020.1.6.mp3",
-    duration: "Unknown",
-  },
   { name: "Lawless2", file: "music/Lawless2.mp3", duration: "Unknown" },
-  {
-    name: "BMB18c1(1)",
-    file: "music/BMB18c1(1).mp3",
-    duration: "Unknown",
-  },
   {
     name: "USAsmoove24unFreeze",
     file: "music/USAsmoove24unFreeze.mp3",
@@ -112,7 +107,7 @@ var listAudio = [
     file: "music/ThornBros2019.mp3",
     duration: "Unknown",
   },
-  { name: "BMB18c1", file: "music/BMB18c1.mp3", duration: "Unknown" },
+  { name: "BMB", file: "music/BMB18c1.mp3", duration: "Unknown" },
   { name: "Powder", file: "music/Powder.mp3", duration: "Unknown" },
   {
     name: "theLowest8.23",
@@ -130,25 +125,15 @@ var listAudio = [
     file: "music/OneChanceSmoothBass1.mp3",
     duration: "Unknown",
   },
-  {
-    name: "theGospel2",
-    file: "music/theGospel2.mp3",
-    duration: "Unknown",
-  },
   { name: "cwhisp", file: "music/cwhisp.mp3", duration: "Unknown" },
-  {
-    name: "PLolaJune18",
-    file: "music/PLolaJune18.mp3",
-    duration: "Unknown",
-  },
   {
     name: "Babyon2020.1.7",
     file: "music/Babyon2020.1.7.mp3",
     duration: "Unknown",
   },
   {
-    name: "Ima Swerve",
-    file: "music/Ima Swerve.mp3",
+    name: "Mighty Long",
+    file: "music/marylandMightyLong.mp3",
     duration: "Unknown",
   },
   { name: "Brawler", file: "music/Brawler.mp3", duration: "Unknown" },
@@ -163,16 +148,6 @@ var listAudio = [
     duration: "Unknown",
   },
   {
-    name: "100Ways2020.1.6(1)",
-    file: "music/100Ways2020.1.6(1).mp3",
-    duration: "Unknown",
-  },
-  {
-    name: "GARTARZjune",
-    file: "music/GARTARZjune.mp3",
-    duration: "Unknown",
-  },
-  {
     name: "BabApril18fkeDrum2",
     file: "music/BabApril18fkeDrum2.mp3",
     duration: "Unknown",
@@ -182,23 +157,11 @@ var listAudio = [
     file: "music/USAJune18.mp3",
     duration: "Unknown",
   },
-  { name: "METAL", file: "music/METAL.mp3", duration: "Unknown" },
-  {
-    name: "latePreacher",
-    file: "music/latePreacher.mp3",
-    duration: "Unknown",
-  },
-  {
-    name: "100WAYZ23",
-    file: "music/100WAYZ23.mp3",
-    duration: "Unknown",
-  },
   {
     name: "Pawmp1.10",
     file: "music/Pawmp1.10.mp3",
     duration: "Unknown",
   },
-  { name: "JAMMIN", file: "music/JAMMIN.mp3", duration: "Unknown" },
   {
     name: "USA2020.1.4",
     file: "music/USA2020.1.4.mp3",
@@ -209,13 +172,8 @@ var listAudio = [
     file: "music/ScratchMetal.mp3",
     duration: "Unknown",
   },
-  { name: "PLolaSax", file: "music/PLolaSax.mp3", duration: "Unknown" },
+  { name: "PLola", file: "music/PLolaSax.mp3", duration: "Unknown" },
   { name: "BMB2020e", file: "music/BMB2020e.mp3", duration: "Unknown" },
-  {
-    name: "AbooATee1",
-    file: "music/AbooATee1.mp3",
-    duration: "Unknown",
-  },
   {
     name: "StolenSong1.5",
     file: "music/StolenSong1.5.mp3",
