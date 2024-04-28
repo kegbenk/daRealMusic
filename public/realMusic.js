@@ -40,11 +40,6 @@ var listAudio = [
     duration: "01:42",
   },
   {
-    name: "100Ways",
-    file: "music/100Ways2020.1.6.mp3",
-    duration: "Unknown",
-  },
-  {
     name: "AbooATee1",
     file: "music/AbooATee1.mp3",
     duration: "Unknown",
@@ -90,8 +85,12 @@ var listAudio = [
     file: "music/01 Hip Hop.mp3",
     duration: "Unknown",
   },
+  {
+    name: "100Ways",
+    file: "music/100Ways2020.1.6.mp3",
+    duration: "Unknown",
+  },
   { name: "scratch2", file: "music/scratch2.mp3", duration: "Unknown" },
-  { name: "Lawless2", file: "music/Lawless2.mp3", duration: "Unknown" },
   {
     name: "USAsmoove24unFreeze",
     file: "music/USAsmoove24unFreeze.mp3",
