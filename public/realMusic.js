@@ -167,13 +167,20 @@ function getClickedElement(event) {
         toggleAudio();
     } else {
         loadNewTrack(clickedIndex).then(() => {
-            // After loading the track, play it
+            // After loading the track, try to play it
             if (currentAudio) {
-                currentAudio.play().catch(error => {
-                    console.error('Error playing audio:', error);
-                });
-                document.querySelector("#icon-play").style.display = "none";
-                document.querySelector("#icon-pause").style.display = "block";
+                const playPromise = currentAudio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log('Audio playback started');
+                        document.querySelector("#icon-play").style.display = "none";
+                        document.querySelector("#icon-pause").style.display = "block";
+                    }).catch(error => {
+                        console.error('Error playing audio:', error);
+                        // Show a message to the user if needed
+                        alert('Please tap the play button to start playback');
+                    });
+                }
             }
         });
     }
@@ -201,6 +208,7 @@ async function loadNewTrack(index) {
             console.log('Creating new audio element');
             audio = document.createElement('audio');
             audio.id = 'myAudio';
+            audio.preload = 'metadata';
             document.body.appendChild(audio);
         }
         
@@ -225,20 +233,6 @@ async function loadNewTrack(index) {
             
             audio.addEventListener('canplay', handleCanPlay);
             audio.addEventListener('error', handleError);
-        });
-        
-        // Set up ended event listener
-        audio.addEventListener('ended', function() {
-            console.log('Song ended, playing next track');
-            if (indexAudio < listAudio.length - 1) {
-                loadNewTrack(indexAudio + 1).then(() => {
-                    if (currentAudio) {
-                        currentAudio.play().catch(error => {
-                            console.error('Error playing next track:', error);
-                        });
-                    }
-                });
-            }
         });
         
         // Set the new source
