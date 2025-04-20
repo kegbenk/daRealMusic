@@ -104,50 +104,57 @@ async function loadMusicList() {
 
 // Function to toggle audio playback
 function toggleAudio() {
-    const audio = document.getElementById("myAudio");
-    if (!audio) {
-        console.error('Audio element not found');
+    if (!currentAudio) {
+        console.error('No audio element available');
         return;
     }
-
-    if (audio.paused) {
+    
+    if (currentAudio.paused) {
+        currentAudio.play().catch(error => {
+            console.error('Error playing audio:', error);
+        });
         document.querySelector("#icon-play").style.display = "none";
         document.querySelector("#icon-pause").style.display = "block";
-        audio.play();
     } else {
+        currentAudio.pause();
         document.querySelector("#icon-play").style.display = "block";
         document.querySelector("#icon-pause").style.display = "none";
-        audio.pause();
     }
 }
 
-// Function to load a new track
-async function loadNewTrack(index) {
+// Function to get signed URL for a song
+async function getSignedUrl(songKey) {
     try {
-        const track = listAudio[index];
-        const audioUrl = await getSignedUrl(track.file);
-        
-        // Update audio source
-        const audio = document.getElementById("myAudio");
-        if (!audio) {
-            console.error('Audio element not found');
-            return;
+        if (!songKey) {
+            console.error('No song key provided to getSignedUrl');
+            throw new Error('Song key is required');
         }
         
-        audio.src = audioUrl;
-        currentAudio = audio;
+        console.log('Requesting signed URL for:', songKey);
         
-        // Update UI
-        document.querySelector(".title").textContent = track.name;
-        updateStylePlaylist(indexAudio, index);
-        indexAudio = index;
+        // Encode the song key for the URL
+        const encodedKey = encodeURIComponent(songKey);
         
-        // Load and play the audio
-        audio.load();
-        toggleAudio();
+        // Always use the server endpoint to get the CloudFront URL
+        const response = await fetch(`/get-signed-url?key=${encodedKey}`);
         
+        if (!response.ok) {
+            let errorMessage = 'Failed to get signed URL';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+                console.error('Error parsing error response:', e);
+            }
+            throw new Error(errorMessage);
+        }
+        
+        const data = await response.json();
+        console.log('Received CloudFront URL:', data.url);
+        return data.url;
     } catch (error) {
-        console.error('Error loading track:', error);
+        console.error('Error in getSignedUrl:', error);
+        throw error;
     }
 }
 
@@ -156,10 +163,104 @@ function getClickedElement(event) {
     const clickedItem = event.currentTarget;
     const clickedIndex = parseInt(clickedItem.getAttribute("data-index"));
     
-    if (clickedIndex === indexAudio) {
+    if (clickedIndex === indexAudio && currentAudio) {
         toggleAudio();
     } else {
-        loadNewTrack(clickedIndex);
+        loadNewTrack(clickedIndex).then(() => {
+            // After loading the track, play it
+            if (currentAudio) {
+                currentAudio.play().catch(error => {
+                    console.error('Error playing audio:', error);
+                });
+                document.querySelector("#icon-play").style.display = "none";
+                document.querySelector("#icon-pause").style.display = "block";
+            }
+        });
+    }
+}
+
+// Function to load new track
+async function loadNewTrack(index) {
+    try {
+        console.log('Loading new track, index:', index);
+        const track = listAudio[index];
+        if (!track) {
+            throw new Error('Track not found');
+        }
+        
+        console.log('Getting signed URL for:', track.file);
+        const audioUrl = await getSignedUrl(track.file);
+        if (!audioUrl) {
+            throw new Error('Failed to get signed URL');
+        }
+        console.log('Received signed URL:', audioUrl);
+        
+        // Get or create audio element
+        let audio = document.getElementById("myAudio");
+        if (!audio) {
+            console.log('Creating new audio element');
+            audio = document.createElement('audio');
+            audio.id = 'myAudio';
+            document.body.appendChild(audio);
+        }
+        
+        // Clear any existing source
+        audio.src = '';
+        
+        // Set up event listeners
+        const canPlayPromise = new Promise((resolve, reject) => {
+            const handleCanPlay = () => {
+                console.log('Audio can play');
+                audio.removeEventListener('canplay', handleCanPlay);
+                audio.removeEventListener('error', handleError);
+                resolve();
+            };
+            
+            const handleError = (error) => {
+                console.error('Audio error in canPlayPromise:', error);
+                audio.removeEventListener('canplay', handleCanPlay);
+                audio.removeEventListener('error', handleError);
+                reject(error);
+            };
+            
+            audio.addEventListener('canplay', handleCanPlay);
+            audio.addEventListener('error', handleError);
+        });
+        
+        // Set the new source
+        audio.src = audioUrl;
+        
+        // Wait for the audio to be ready
+        await canPlayPromise;
+        
+        currentAudio = audio;
+        indexAudio = index;
+        
+        // Update UI
+        document.querySelector(".title").textContent = track.name;
+        document.querySelector(".duration").textContent = track.duration || "00:00";
+        
+        // Update active track in playlist
+        const playlistItems = document.querySelectorAll(".playlist-track-ctn");
+        playlistItems.forEach(item => item.classList.remove("active-track"));
+        const currentItem = document.querySelector(`#ptc-${index}`);
+        if (currentItem) {
+            currentItem.classList.add("active-track");
+        }
+        
+        // Update play/pause button
+        document.querySelector("#icon-play").style.display = "block";
+        document.querySelector("#icon-pause").style.display = "none";
+        
+        console.log('Track loaded successfully');
+        
+    } catch (error) {
+        console.error('Error loading track:', error);
+        // Reset the audio element on error
+        const audio = document.getElementById("myAudio");
+        if (audio) {
+            audio.src = '';
+        }
     }
 }
 
@@ -167,20 +268,29 @@ function getClickedElement(event) {
 window.onload = async function() {
     console.log('Player initializing...');
     
-    // Set up audio element
-    const audio = document.getElementById("myAudio");
+    // Create audio element if it doesn't exist
+    let audio = document.getElementById("myAudio");
     if (!audio) {
-        console.error('Audio element not found during initialization');
-        return;
+        console.log('Creating new audio element');
+        audio = document.createElement('audio');
+        audio.id = 'myAudio';
+        document.body.appendChild(audio);
     }
     
     // Set up event listeners for audio element
     audio.addEventListener('loadedmetadata', function() {
+        console.log('Audio metadata loaded');
         const duration = formatTime(audio.duration);
         document.querySelector(".duration").textContent = duration;
     });
     
-    // Load the music list (which will preload all metadata)
+    audio.addEventListener('error', function(e) {
+        console.error('Audio error:', e);
+        console.error('Audio error details:', audio.error);
+    });
+    
+    // Load the music list
+    console.log('Loading music list...');
     await loadMusicList();
     
     // Set up progress bar
@@ -188,6 +298,12 @@ window.onload = async function() {
     if (progressbar) {
         progressbar.addEventListener("click", seek);
     }
+    
+    // Set up event listeners for playlist items
+    const playListItems = document.querySelectorAll(".playlist-track-ctn");
+    playListItems.forEach(item => {
+        item.addEventListener("click", getClickedElement);
+    });
     
     console.log('Player initialized');
 };
@@ -311,39 +427,6 @@ function toggleMute() {
         currentAudio.muted = false;
         volMute.style.display = "none";
         volUp.style.display = "block";
-    }
-}
-
-// Function to get signed URL for a song
-async function getSignedUrl(songKey) {
-    try {
-        if (!songKey) {
-            console.error('No song key provided to getSignedUrl');
-            throw new Error('Song key is required');
-        }
-        
-        console.log('Requesting signed URL for:', songKey);
-        
-        // Always use the server endpoint to get the CloudFront URL
-        const response = await fetch(`/get-signed-url?key=${encodeURIComponent(songKey)}`);
-        
-        if (!response.ok) {
-            let errorMessage = 'Failed to get signed URL';
-            try {
-                const errorData = await response.json();
-                errorMessage = errorData.error || errorMessage;
-            } catch (e) {
-                console.error('Error parsing error response:', e);
-            }
-            throw new Error(errorMessage);
-        }
-        
-        const data = await response.json();
-        console.log('Received CloudFront URL:', data.url);
-        return data.url;
-    } catch (error) {
-        console.error('Error in getSignedUrl:', error);
-        throw error;
     }
 }
 
