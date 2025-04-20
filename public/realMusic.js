@@ -146,9 +146,20 @@ async function loadNewTrack(index) {
         // Reset all icons to play state
         updatePlaylistIcons(-1);
         
-        // If there was a previously playing track, ensure it's paused
-        if (currentAudio && !currentAudio.paused) {
+        // Get or create audio element
+        let audio = document.getElementById("myAudio");
+        if (!audio) {
+            console.log('Creating new audio element');
+            audio = document.createElement('audio');
+            audio.id = 'myAudio';
+            audio.preload = 'none'; // Changed from 'metadata' to 'none' for better iOS compatibility
+            document.body.appendChild(audio);
+        }
+        
+        // If there was a previously playing track, ensure it's paused and reset
+        if (currentAudio) {
             currentAudio.pause();
+            currentAudio.currentTime = 0;
         }
         
         console.log('Getting signed URL for:', track.file);
@@ -157,16 +168,6 @@ async function loadNewTrack(index) {
             throw new Error('Failed to get signed URL');
         }
         console.log('Received signed URL:', audioUrl);
-        
-        // Get or create audio element
-        let audio = document.getElementById("myAudio");
-        if (!audio) {
-            console.log('Creating new audio element');
-            audio = document.createElement('audio');
-            audio.id = 'myAudio';
-            audio.preload = 'metadata';
-            document.body.appendChild(audio);
-        }
         
         // Clear any existing source
         audio.src = '';
@@ -275,7 +276,18 @@ function toggleAudio() {
         document.querySelector("#icon-play").style.display = "none";
         document.querySelector("#icon-pause").style.display = "block";
         updatePlaylistIcons(indexAudio);
-        currentAudio.play();
+        
+        // iOS requires user interaction to start audio
+        const playPromise = currentAudio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.error('Error playing audio:', error);
+                // Reset UI on error
+                document.querySelector("#icon-play").style.display = "block";
+                document.querySelector("#icon-pause").style.display = "none";
+                updatePlaylistIcons(-1);
+            });
+        }
     } else {
         document.querySelector("#icon-play").style.display = "block";
         document.querySelector("#icon-pause").style.display = "none";
