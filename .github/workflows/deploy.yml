@@ -36,17 +36,50 @@ jobs:
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           script: |
             # Stop Apache
+            echo "Stopping Apache..."
             sudo /opt/bitnami/ctlscript.sh stop apache
             
+            # Install Nginx if not already installed
+            echo "Installing Nginx..."
+            sudo apt-get update
+            sudo apt-get install -y nginx
+            
+            # Create Nginx configuration
+            echo "Setting up Nginx configuration..."
+            sudo tee /etc/nginx/sites-available/music-player << EOF
+            server {
+                listen 80;
+                server_name _;
+                
+                location / {
+                    proxy_pass http://localhost:3000;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade \$http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host \$host;
+                    proxy_cache_bypass \$http_upgrade;
+                }
+            }
+            EOF
+            
+            # Enable the site and restart Nginx
+            sudo ln -sf /etc/nginx/sites-available/music-player /etc/nginx/sites-enabled/
+            sudo rm -f /etc/nginx/sites-enabled/default
+            sudo nginx -t
+            sudo systemctl restart nginx
+            
             # Create directory with proper permissions
+            echo "Setting up application directory..."
             sudo mkdir -p /opt/bitnami/apps/music-player
             sudo chown -R bitnami:bitnami /opt/bitnami/apps/music-player
             
             # Copy files from temp directory
+            echo "Copying application files..."
             sudo cp -r /tmp/music-player/* /opt/bitnami/apps/music-player/
             sudo chown -R bitnami:bitnami /opt/bitnami/apps/music-player/*
             
             # Create service file
+            echo "Creating service file..."
             sudo tee /etc/systemd/system/music-player.service << EOF
             [Unit]
             Description=Music Player Node.js Application
@@ -59,17 +92,23 @@ jobs:
             ExecStart=/opt/bitnami/node/bin/node index.js
             Restart=on-failure
             Environment=NODE_ENV=production
-            Environment=PORT=80
+            Environment=PORT=3000
 
             [Install]
             WantedBy=multi-user.target
             EOF
             
             # Reload systemd and enable service
+            echo "Setting up systemd service..."
             sudo systemctl daemon-reload
             sudo systemctl enable music-player
             
             # Install dependencies and restart service
+            echo "Installing dependencies and starting service..."
             cd /opt/bitnami/apps/music-player
             npm install
-            sudo systemctl restart music-player 
+            sudo systemctl restart music-player
+            
+            # Debug: Verify service is running
+            echo "Checking service status:"
+            sudo systemctl status music-player 
