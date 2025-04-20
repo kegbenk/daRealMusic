@@ -2,9 +2,12 @@ const express = require("express");
 const path = require("path");
 const AWS = require('aws-sdk');
 const { s3, bucketName, cloudfrontDomain } = require('./config/aws');
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
+const port = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -44,6 +47,6 @@ app.get("/api/music/:filename", async (req, res) => {
     }
 });
 
-app.listen(8080, () => {
-    console.log(`Server successfully running on port 8080 in ${isProduction ? 'production' : 'development'} mode`);
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
 });
