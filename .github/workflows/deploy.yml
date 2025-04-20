@@ -61,6 +61,7 @@ jobs:
             Environment=AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
             Environment=S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
             Environment=CLOUDFRONT_DOMAIN=${{ secrets.CLOUDFRONT_DOMAIN }}
+            Environment=API_URL=${{ secrets.API_URL }}
 
             [Install]
             WantedBy=multi-user.target
@@ -79,6 +80,7 @@ jobs:
             AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
             S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
             CLOUDFRONT_DOMAIN=$CLOUDFRONT_DOMAIN
+            API_URL=${{ secrets.API_URL }}
             EOL
             chmod 600 /opt/bitnami/apps/music-player/.env
             
