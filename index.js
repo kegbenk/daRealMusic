@@ -1,15 +1,8 @@
 const express = require("express");
 const path = require("path");
-const AWS = require('aws-sdk');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
-const awsConfig = require('./config/aws');
-
-// Configure AWS
-AWS.config.update(awsConfig);
-
-// Create S3 client
-const s3 = new AWS.S3();
+const { s3, bucketName, cloudfrontDomain } = require('./config/aws');
 
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
@@ -19,15 +12,15 @@ const port = process.env.PORT || 3000;
 console.log('Environment Variables:');
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('AWS_REGION:', process.env.AWS_REGION);
-console.log('S3_BUCKET_NAME:', process.env.S3_BUCKET_NAME);
-console.log('CLOUDFRONT_DOMAIN:', process.env.CLOUDFRONT_DOMAIN);
+console.log('S3_BUCKET_NAME:', bucketName);
+console.log('CLOUDFRONT_DOMAIN:', cloudfrontDomain);
 
 app.use(express.static(path.join(__dirname, "public")));
 
 // Function to generate signed URL for a music file
 async function getSignedUrl(key) {
     const params = {
-        Bucket: process.env.S3_BUCKET_NAME,
+        Bucket: bucketName,
         Key: key,
         Expires: 3600 // URL expires in 1 hour
     };
