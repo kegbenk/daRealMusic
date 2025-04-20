@@ -43,53 +43,45 @@ async function getSignedUrl(songKey) {
 // Function to play a song
 async function playSong(songKey) {
     try {
-        if (!songKey) {
-            console.error('No song key provided to playSong');
-            throw new Error('Song key is required');
-        }
-        
         console.log('Attempting to play song:', songKey);
-        const audioUrl = await getSignedUrl(songKey);
-        console.log('Created audio element with URL:', audioUrl);
         
-        // Stop current audio if playing
-        if (currentAudio) {
-            currentAudio.pause();
-            currentAudio = null;
+        // Get the CloudFront URL from our backend
+        const response = await fetch(`/get-signed-url?key=${encodeURIComponent(songKey)}`);
+        if (!response.ok) {
+            throw new Error(`Failed to get URL: ${response.status} ${response.statusText}`);
         }
         
-        // Create new audio element
-        currentAudio = new Audio(audioUrl);
+        const data = await response.json();
+        if (!data.url) {
+            throw new Error('No URL returned from server');
+        }
+        
+        console.log('Received CloudFront URL:', data.url);
+        
+        // Create audio element with the CloudFront URL
+        const audio = new Audio(data.url);
         
         // Set up event listeners
-        currentAudio.addEventListener('loadedmetadata', () => {
+        audio.addEventListener('loadedmetadata', () => {
             console.log('Audio metadata loaded');
             updateProgressBar(0);
-            updateTimeDisplay(0, currentAudio.duration);
-            document.querySelector('.title').textContent = songKey;
-            document.querySelector('.duration').textContent = formatTime(currentAudio.duration);
         });
         
-        currentAudio.addEventListener('error', (e) => {
-            console.error('Audio error:', e);
-            console.error('Audio error details:', currentAudio.error);
+        audio.addEventListener('timeupdate', () => {
+            updateProgressBar((audio.currentTime / audio.duration) * 100);
         });
         
-        currentAudio.addEventListener('timeupdate', () => {
-            updateProgressBar(currentAudio.currentTime / currentAudio.duration);
-            updateTimeDisplay(currentAudio.currentTime, currentAudio.duration);
+        audio.addEventListener('ended', () => {
+            playNextSong();
         });
         
         // Play the audio
-        console.log('Attempting to play audio');
-        await currentAudio.play();
-        console.log('Audio playback started');
+        await audio.play();
+        currentAudio = audio;
+        updatePlayPauseButton();
         
-        // Update play/pause button
-        document.getElementById('icon-play').style.display = 'none';
-        document.getElementById('icon-pause').style.display = 'inline';
     } catch (error) {
         console.error('Error playing song:', error);
-        throw error;
+        // You might want to show an error message to the user here
     }
 } 
