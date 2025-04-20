@@ -175,24 +175,17 @@ function getClickedElement(event) {
         loadNewTrack(clickedIndex).then(() => {
             // After loading the track, try to play it
             if (currentAudio) {
-                // Create a user interaction event
-                const playButton = document.querySelector("#btn-faws-play-pause");
-                if (playButton) {
-                    playButton.click();
-                } else {
-                    // Fallback to direct play attempt
-                    const playPromise = currentAudio.play();
-                    if (playPromise !== undefined) {
-                        playPromise.then(() => {
-                            console.log('Audio playback started');
-                            document.querySelector("#icon-play").style.display = "none";
-                            document.querySelector("#icon-pause").style.display = "block";
-                        }).catch(error => {
-                            console.error('Error playing audio:', error);
-                            // Show a message to the user if needed
-                            alert('Please tap the play button to start playback');
-                        });
-                    }
+                const playPromise = currentAudio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log('Audio playback started');
+                        document.querySelector("#icon-play").style.display = "none";
+                        document.querySelector("#icon-pause").style.display = "block";
+                    }).catch(error => {
+                        console.error('Error playing audio:', error);
+                        // Show a message to the user if needed
+                        alert('Please tap the play button to start playback');
+                    });
                 }
             }
         });
@@ -222,7 +215,6 @@ async function loadNewTrack(index) {
             audio = document.createElement('audio');
             audio.id = 'myAudio';
             audio.preload = 'metadata';
-            audio.crossOrigin = 'anonymous'; // Add CORS support
             document.body.appendChild(audio);
         }
         
