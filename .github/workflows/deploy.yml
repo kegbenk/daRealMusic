@@ -25,7 +25,7 @@ jobs:
           username: bitnami
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           source: "."
-          target: "/opt/bitnami/apps/music-player"
+          target: "/tmp/music-player"
           strip_components: 0
           
       - name: Setup and restart service
@@ -35,6 +35,14 @@ jobs:
           username: bitnami
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           script: |
+            # Create directory with proper permissions
+            sudo mkdir -p /opt/bitnami/apps/music-player
+            sudo chown -R bitnami:bitnami /opt/bitnami/apps/music-player
+            
+            # Copy files from temp directory
+            sudo cp -r /tmp/music-player/* /opt/bitnami/apps/music-player/
+            sudo chown -R bitnami:bitnami /opt/bitnami/apps/music-player/*
+            
             # Create service file
             sudo tee /etc/systemd/system/music-player.service << EOF
             [Unit]
