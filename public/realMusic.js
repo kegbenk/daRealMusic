@@ -31,7 +31,7 @@ function createTrackItem(index, name, duration) {
 var listAudio = [
   {
     name: "GARTARZ",
-    file: "music/GARTARZjune.mp3",
+    file: "GARTARZjune.mp3",
     duration: "Unknown",
   },
   {
