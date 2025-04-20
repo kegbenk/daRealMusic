@@ -274,8 +274,10 @@ app.get('/list-music', async (req, res) => {
 });
 
 // Start the server
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
     console.log(`Server is running on port ${port}`);
+    console.log(`Accessible at: http://localhost:${port}`);
+    console.log(`External access: http://hotntasty.info:${port}`);
     if (!isProduction) {
         console.log('Development mode: CORS enabled');
         console.log('Access the application at: http://localhost:3000');
