@@ -70,13 +70,19 @@ jobs:
             npm install
             sudo systemctl restart music-player
             
-      - name: Create .env file on server
-        run: |
-          ssh -i ${{ secrets.LIGHTSAIL_SSH_KEY }} bitnami@${{ secrets.LIGHTSAIL_HOST }} "cat > /opt/bitnami/apps/music-player/.env << 'EOL'
-          NODE_ENV=production
-          AWS_REGION=us-east-1
-          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
-          CLOUDFRONT_DOMAIN=${{ secrets.CLOUDFRONT_DOMAIN }}
-          EOL" 
+      - name: Create .env file
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: bitnami
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          script: |
+            cat > /opt/bitnami/apps/music-player/.env << 'EOL'
+            NODE_ENV=production
+            AWS_REGION=us-east-1
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
+            CLOUDFRONT_DOMAIN=${{ secrets.CLOUDFRONT_DOMAIN }}
+            EOL
+            chmod 600 /opt/bitnami/apps/music-player/.env 
