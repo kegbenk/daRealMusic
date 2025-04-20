@@ -195,15 +195,33 @@ for (var i = 0; i < listAudio.length; i++) {
 }
 var indexAudio = 0;
 
-function loadNewTrack(index) {
-  var player = document.querySelector("#source-audio");
-  player.src = listAudio[index].file;
-  document.querySelector(".title").innerHTML = listAudio[index].name;
-  this.currentAudio = document.getElementById("myAudio");
-  this.currentAudio.load();
-  this.toggleAudio();
-  this.updateStylePlaylist(this.indexAudio, index);
-  this.indexAudio = index;
+async function loadNewTrack(index) {
+  try {
+    const filename = listAudio[index].file.split('/').pop();
+    let audioUrl;
+    
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      // Local development - use local files
+      audioUrl = listAudio[index].file;
+    } else {
+      // Production - fetch signed URL from API
+      const response = await fetch(`/api/music/${filename}`);
+      const data = await response.json();
+      audioUrl = data.url;
+    }
+    
+    var player = document.querySelector("#source-audio");
+    player.src = audioUrl;
+    document.querySelector(".title").innerHTML = listAudio[index].name;
+    this.currentAudio = document.getElementById("myAudio");
+    this.currentAudio.load();
+    this.toggleAudio();
+    this.updateStylePlaylist(this.indexAudio, index);
+    this.indexAudio = index;
+  } catch (error) {
+    console.error('Error loading track:', error);
+    // Handle error appropriately
+  }
 }
 
 var playListItems = document.querySelectorAll(".playlist-track-ctn");

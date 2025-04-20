@@ -1,0 +1,63 @@
+name: Deploy to Lightsail
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Deploy to Lightsail
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: bitnami
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          source: "."
+          target: "/opt/bitnami/apps/music-player"
+          strip_components: 0
+          
+      - name: Setup and restart service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: bitnami
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          script: |
+            # Create service file
+            sudo tee /etc/systemd/system/music-player.service << EOF
+            [Unit]
+            Description=Music Player Node.js Application
+            After=network.target
+
+            [Service]
+            Type=simple
+            User=bitnami
+            WorkingDirectory=/opt/bitnami/apps/music-player
+            ExecStart=/opt/bitnami/node/bin/node index.js
+            Restart=on-failure
+            Environment=NODE_ENV=production
+
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+            
+            # Reload systemd and enable service
+            sudo systemctl daemon-reload
+            sudo systemctl enable music-player
+            
+            # Install dependencies and restart service
+            cd /opt/bitnami/apps/music-player
+            npm install
+            sudo systemctl restart music-player 
