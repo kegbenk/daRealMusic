@@ -1,19 +1,25 @@
 {
-  "name": "darealmusic1",
+  "name": "music-player",
   "version": "1.0.0",
-  "description": "da real music",
+  "description": "Music player application with S3 and CloudFront integration",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "debug": "node --inspect index.js",
+    "test-s3": "node -e \"require('./config/aws').testS3()\""
   },
   "keywords": [],
   "author": "Neb Rellek",
   "license": "ISC",
   "dependencies": {
-    "aws-sdk": "^2.1506.0",
+    "aws-sdk": "^2.1499.0",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "multer": "^1.4.5-lts.1",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
   }
 }

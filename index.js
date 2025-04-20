@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("express");
 const path = require("path");
 const multer = require('multer');
@@ -8,19 +9,64 @@ const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
 const port = process.env.PORT || 3000;
 
-// Comprehensive debug logging
+// Debug logging
 console.log('=== Server Startup Debug Information ===');
 console.log('Environment:', process.env.NODE_ENV);
 console.log('Port:', port);
 console.log('AWS Configuration:');
-console.log('- Region:', awsConfig.region);
-console.log('- Access Key ID:', awsConfig.accessKeyId ? 'Present' : 'Missing');
-console.log('- Secret Access Key:', awsConfig.secretAccessKey ? 'Present' : 'Missing');
-console.log('- Bucket Name:', bucketName);
-console.log('- CloudFront Domain:', cloudfrontDomain);
+console.log('- Region:', process.env.AWS_REGION);
+console.log('- Access Key ID:', process.env.AWS_ACCESS_KEY_ID ? 'Present' : 'Missing');
+console.log('- Secret Access Key:', process.env.AWS_SECRET_ACCESS_KEY ? 'Present' : 'Missing');
+console.log('- Bucket Name:', process.env.S3_BUCKET_NAME);
+console.log('- CloudFront Domain:', process.env.CLOUDFRONT_DOMAIN);
 console.log('=====================================');
 
+// Middleware
+app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
+
+// CORS for local development
+if (!isProduction) {
+    app.use((req, res, next) => {
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+        next();
+    });
+}
+
+// Test endpoint to verify S3 connectivity
+app.get('/test-s3', async (req, res) => {
+    try {
+        console.log('Testing S3 connectivity...');
+        
+        // List objects in the bucket
+        const params = {
+            Bucket: bucketName,
+            MaxKeys: 5
+        };
+        
+        console.log('Listing objects in bucket:', bucketName);
+        const data = await s3.listObjectsV2(params).promise();
+        
+        console.log('S3 test successful. Found objects:', data.Contents.map(obj => obj.Key));
+        res.json({
+            success: true,
+            bucket: bucketName,
+            objects: data.Contents.map(obj => ({
+                key: obj.Key,
+                size: obj.Size,
+                lastModified: obj.LastModified
+            }))
+        });
+    } catch (error) {
+        console.error('S3 test failed:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            code: error.code
+        });
+    }
+});
 
 // Function to generate signed URL for a music file
 async function getSignedUrl(key) {
@@ -115,6 +161,12 @@ app.get('/get-signed-url', async (req, res) => {
     }
 });
 
+// Start the server
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
+    if (!isProduction) {
+        console.log('Development mode: CORS enabled');
+        console.log('Access the application at: http://localhost:3000');
+        console.log('Test S3 connectivity at: http://localhost:3000/test-s3');
+    }
 });
