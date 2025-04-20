@@ -1,8 +1,16 @@
 // Function to get signed URL for a song
 async function getSignedUrl(songKey) {
     try {
+        if (!songKey) {
+            console.error('No song key provided to getSignedUrl');
+            throw new Error('Song key is required');
+        }
+        
         console.log('Requesting signed URL for:', songKey);
-        const response = await fetch(`/get-signed-url?key=music/${songKey}`);
+        const url = `/get-signed-url?key=music/${songKey}`;
+        console.log('Making request to:', url);
+        
+        const response = await fetch(url);
         
         if (!response.ok) {
             const errorData = await response.json();
@@ -22,9 +30,14 @@ async function getSignedUrl(songKey) {
 // Function to play a song
 async function playSong(songKey) {
     try {
+        if (!songKey) {
+            console.error('No song key provided to playSong');
+            throw new Error('Song key is required');
+        }
+        
         console.log('Attempting to play song:', songKey);
         const signedUrl = await getSignedUrl(songKey);
-        console.log('Created audio element with URL');
+        console.log('Created audio element with URL:', signedUrl);
         
         const audio = new Audio(signedUrl);
         
