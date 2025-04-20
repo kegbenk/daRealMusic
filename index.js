@@ -143,70 +143,82 @@ app.get("/", async (req, res) => {
     res.sendFile(path.join(__dirname, "public", "home.html"));
 });
 
-// Route to get signed URL for a song
+// Endpoint to get a direct CloudFront URL for a song
 app.get('/get-signed-url', async (req, res) => {
-  try {
-    const key = req.query.key;
-    if (!key) {
-      console.error('Missing key parameter');
-      return res.status(400).json({ error: 'Missing key parameter' });
-    }
-
-    console.log('=== S3 Operation Debug ===');
-    console.log('Requested key:', key);
-    console.log('Environment variables:', {
-      NODE_ENV: process.env.NODE_ENV,
-      AWS_REGION: process.env.AWS_REGION,
-      S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
-      CLOUDFRONT_DOMAIN: process.env.CLOUDFRONT_DOMAIN
-    });
-    
-    const params = {
-      Bucket: process.env.S3_BUCKET_NAME,
-      Key: key
-    };
-    
-    console.log('S3 HeadObject Parameters:', JSON.stringify(params, null, 2));
-    console.log('Attempting to check if object exists...');
-
     try {
-      const headObject = await s3.headObject(params).promise();
-      console.log('Object exists in S3:', {
-        ContentType: headObject.ContentType,
-        ContentLength: headObject.ContentLength,
-        LastModified: headObject.LastModified
-      });
-      
-      // Return direct CloudFront URL
-      const directUrl = `https://${process.env.CLOUDFRONT_DOMAIN}/${key}`;
-      console.log('Generated direct URL:', directUrl);
-      res.json({ url: directUrl });
-    } catch (error) {
-      console.error('S3 operation failed:', {
-        code: error.code,
-        message: error.message,
-        statusCode: error.statusCode,
-        time: error.time,
-        requestId: error.requestId
-      });
-      if (error.code === 'NotFound') {
-        return res.status(404).json({ 
-          error: 'File not found',
-          details: `The file ${key} does not exist in the bucket`
+        const key = req.query.key;
+        if (!key) {
+            return res.status(400).json({ error: 'Key parameter is required' });
+        }
+
+        console.log('=== S3 Operation Debug ===');
+        console.log('Requested key:', key);
+        console.log('Environment variables:', {
+            NODE_ENV: process.env.NODE_ENV,
+            AWS_REGION: process.env.AWS_REGION,
+            S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
+            CLOUDFRONT_DOMAIN: process.env.CLOUDFRONT_DOMAIN
         });
-      }
-      return res.status(500).json({ 
-        error: 'Failed to generate URL',
-        details: error.message
-      });
+
+        // Check if the object exists in S3
+        const headParams = {
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: key
+        };
+        console.log('S3 HeadObject Parameters:', JSON.stringify(headParams, null, 2));
+        console.log('Attempting to check if object exists...');
+
+        try {
+            const headData = await s3.headObject(headParams).promise();
+            console.log('Object exists in S3:', headData);
+
+            // Construct the direct CloudFront URL
+            const cloudfrontDomain = process.env.CLOUDFRONT_DOMAIN.replace(/^https?:\/\//, '');
+            const directUrl = `https://${cloudfrontDomain}/${key}`;
+            console.log('Generated direct URL:', directUrl);
+
+            res.json({ url: directUrl });
+        } catch (s3Error) {
+            console.error('S3 HeadObject Error:', s3Error);
+            res.status(404).json({ error: 'File not found in S3' });
+        }
+    } catch (error) {
+        console.error('Error in get-signed-url:', error);
+        res.status(500).json({ error: 'Failed to generate URL' });
     }
-  } catch (error) {
-    console.error('Error in get-signed-url:', error);
-    res.status(500).json({ 
-      error: 'Internal server error',
-      details: error.message
-    });
-  }
+});
+
+// Endpoint to list all music files in S3
+app.get('/list-music', async (req, res) => {
+    try {
+        console.log('Listing music files from bucket:', process.env.S3_BUCKET_NAME);
+        
+        const params = {
+            Bucket: process.env.S3_BUCKET_NAME
+        };
+
+        console.log('S3 ListObjectsV2 params:', params);
+        const data = await s3.listObjectsV2(params).promise();
+        console.log('Found objects:', data.Contents.length);
+        
+        // Filter for MP3 files and format the response
+        const musicFiles = data.Contents
+            .filter(item => item.Key.toLowerCase().endsWith('.mp3'))
+            .map(item => ({
+                name: item.Key.replace('.mp3', ''),
+                file: item.Key,
+                duration: 'Unknown'  // Will be updated when played
+            }));
+
+        console.log('Returning music files:', musicFiles.length);
+        res.json(musicFiles);
+    } catch (error) {
+        console.error('Error listing music files:', error);
+        res.status(500).json({ 
+            error: 'Failed to list music files',
+            details: error.message
+        });
+    }
 });
 
 // Start the server
