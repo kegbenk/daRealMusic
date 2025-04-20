@@ -8,6 +8,9 @@ const awsConfig = require('./config/aws');
 // Configure AWS
 AWS.config.update(awsConfig);
 
+// Create S3 client
+const s3 = new AWS.S3();
+
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
 const port = process.env.PORT || 3000;
@@ -30,10 +33,16 @@ async function getSignedUrl(key) {
     };
     
     try {
+        // Check if the object exists
+        await s3.headObject(params).promise();
+        console.log('Object exists in S3:', key);
+        
+        // Generate signed URL
         const url = await s3.getSignedUrlPromise('getObject', params);
+        console.log('Generated signed URL for:', key);
         return url;
     } catch (error) {
-        console.error('Error generating signed URL:', error);
+        console.error('Error in getSignedUrl:', error);
         throw error;
     }
 }
@@ -68,36 +77,15 @@ app.get('/get-signed-url', async (req, res) => {
             return res.status(400).json({ error: 'Key parameter is required' });
         }
 
-        const s3 = new AWS.S3();
-        const params = {
-            Bucket: process.env.S3_BUCKET_NAME,
-            Key: key,
-            Expires: 3600 // URL expires in 1 hour
-        };
-
-        console.log('S3 Params:', JSON.stringify(params, null, 2));
-
-        // Check if the object exists
-        try {
-            await s3.headObject(params).promise();
-            console.log('Object exists in S3');
-        } catch (error) {
-            console.error('Error checking object in S3:', error);
-            return res.status(404).json({ error: 'File not found in S3' });
-        }
-
-        // Generate signed URL
-        try {
-            const url = await s3.getSignedUrlPromise('getObject', params);
-            console.log('Generated signed URL:', url);
-            res.json({ url });
-        } catch (error) {
-            console.error('Error generating signed URL:', error);
-            res.status(500).json({ error: 'Failed to generate signed URL', details: error.message });
-        }
+        const signedUrl = await getSignedUrl(key);
+        res.json({ url: signedUrl });
     } catch (error) {
         console.error('Error in get-signed-url route:', error);
-        res.status(500).json({ error: 'Internal server error', details: error.message });
+        if (error.code === 'NotFound') {
+            res.status(404).json({ error: 'File not found in S3' });
+        } else {
+            res.status(500).json({ error: 'Failed to generate signed URL', details: error.message });
+        }
     }
 });
 
