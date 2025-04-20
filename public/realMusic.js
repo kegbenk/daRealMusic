@@ -205,7 +205,10 @@ async function loadNewTrack(index) {
       audioUrl = listAudio[index].file;
     } else {
       // Production - fetch signed URL from API
-      const response = await fetch(`/api/music/${filename}`);
+      const response = await fetch(`/get-signed-url?key=${encodeURIComponent(filename)}`);
+      if (!response.ok) {
+        throw new Error('Failed to get signed URL');
+      }
       const data = await response.json();
       audioUrl = data.url;
     }
