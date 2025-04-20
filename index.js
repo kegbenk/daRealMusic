@@ -144,10 +144,18 @@ app.get('/get-signed-url', async (req, res) => {
         res.json({ url: signedUrl });
     } catch (error) {
         console.error('S3 Operation Error:', error);
-        res.status(404).json({ 
-            error: 'File not found',
-            details: error.message
-        });
+        if (error.code === 'NotFound') {
+            res.status(404).json({ 
+                error: 'File not found',
+                details: `The file "${key}" does not exist in the S3 bucket`
+            });
+        } else {
+            res.status(500).json({ 
+                error: 'S3 operation failed',
+                details: error.message,
+                code: error.code
+            });
+        }
     }
 });
 

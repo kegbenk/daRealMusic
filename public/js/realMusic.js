@@ -20,9 +20,14 @@ async function getSignedUrl(songKey) {
             const response = await fetch(`/get-signed-url?key=${encodeURIComponent(songKey)}`);
             
             if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Error getting signed URL:', errorData);
-                throw new Error(errorData.error || 'Failed to get signed URL');
+                let errorMessage = 'Failed to get signed URL';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    console.error('Error parsing error response:', e);
+                }
+                throw new Error(errorMessage);
             }
             
             const data = await response.json();
