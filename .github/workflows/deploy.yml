@@ -78,6 +78,17 @@ jobs:
             sudo cp -r /tmp/music-player/* /opt/bitnami/apps/music-player/
             sudo chown -R bitnami:bitnami /opt/bitnami/apps/music-player/*
             
+            # Create environment file
+            echo "Creating environment file..."
+            sudo tee /opt/bitnami/apps/music-player/.env << EOF
+            NODE_ENV=production
+            AWS_REGION=us-east-1
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
+            CLOUDFRONT_DOMAIN=${{ secrets.CLOUDFRONT_DOMAIN }}
+            EOF
+            
             # Create service file
             echo "Creating service file..."
             sudo tee /etc/systemd/system/music-player.service << EOF
