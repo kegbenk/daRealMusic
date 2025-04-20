@@ -13,32 +13,11 @@ async function getSignedUrl(songKey) {
         
         console.log('Requesting signed URL for:', songKey);
         
-        // Check if we're in development mode
-        const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        // Always use CloudFront URL in both development and production
+        const cloudfrontUrl = `https://dpv15oji5tyx0.cloudfront.net/${songKey}`;
+        console.log('Using CloudFront URL:', cloudfrontUrl);
+        return cloudfrontUrl;
         
-        if (isDevelopment) {
-            console.log('Development mode: Using CloudFront URL');
-            // In development, use the CloudFront URL
-            return `https://dpv15oji5tyx0.cloudfront.net/${songKey}`;
-        } else {
-            // In production, get signed URL from the server
-            const response = await fetch(`/get-signed-url?key=${encodeURIComponent(songKey)}`);
-            
-            if (!response.ok) {
-                let errorMessage = 'Failed to get signed URL';
-                try {
-                    const errorData = await response.json();
-                    errorMessage = errorData.error || errorMessage;
-                } catch (e) {
-                    console.error('Error parsing error response:', e);
-                }
-                throw new Error(errorMessage);
-            }
-            
-            const data = await response.json();
-            console.log('Received signed URL:', data.url);
-            return data.url;
-        }
     } catch (error) {
         console.error('Error in getSignedUrl:', error);
         throw error;
@@ -54,33 +33,39 @@ function formatTime(seconds) {
 
 // Function to create track item
 function createTrackItem(index, name, duration) {
-    const trackItem = document.createElement("div");
-    trackItem.className = "playlist-track-ctn";
-    trackItem.id = `ptc-${index}`;
+    const playlistContainer = document.querySelector(".playlist-ctn");
+    if (!playlistContainer) {
+        console.error('Playlist container not found');
+        return;
+    }
+
+    var trackItem = document.createElement("div");
+    trackItem.setAttribute("class", "playlist-track-ctn");
+    trackItem.setAttribute("id", "ptc-" + index);
     trackItem.setAttribute("data-index", index);
-    
-    const playBtnItem = document.createElement("div");
-    playBtnItem.className = "playlist-btn-play";
-    playBtnItem.id = `pbp-${index}`;
-    
-    const btnImg = document.createElement("i");
-    btnImg.className = "fas fa-play";
-    btnImg.id = `p-img-${index}`;
-    
-    const trackInfoItem = document.createElement("div");
-    trackInfoItem.className = "playlist-info-track";
-    trackInfoItem.textContent = name;
-    
-    const trackDurationItem = document.createElement("div");
-    trackDurationItem.className = "playlist-duration";
-    trackDurationItem.textContent = duration;
-    
-    playBtnItem.appendChild(btnImg);
+    playlistContainer.appendChild(trackItem);
+
+    var playBtnItem = document.createElement("div");
+    playBtnItem.setAttribute("class", "playlist-btn-play");
+    playBtnItem.setAttribute("id", "pbp-" + index);
     trackItem.appendChild(playBtnItem);
+
+    var btnImg = document.createElement("i");
+    btnImg.setAttribute("class", "fas fa-play");
+    btnImg.setAttribute("height", "40");
+    btnImg.setAttribute("width", "40");
+    btnImg.setAttribute("id", "p-img-" + index);
+    playBtnItem.appendChild(btnImg);
+
+    var trackInfoItem = document.createElement("div");
+    trackInfoItem.setAttribute("class", "playlist-info-track");
+    trackInfoItem.innerHTML = name;
     trackItem.appendChild(trackInfoItem);
+
+    var trackDurationItem = document.createElement("div");
+    trackDurationItem.setAttribute("class", "playlist-duration");
+    trackDurationItem.innerHTML = duration;
     trackItem.appendChild(trackDurationItem);
-    
-    document.querySelector(".playlist-ctn").appendChild(trackItem);
 }
 
 // Function to load music list from metadata
@@ -95,17 +80,28 @@ async function loadMusicList() {
         console.log('Loaded music metadata:', listAudio);
         
         // Clear existing playlist
-        document.querySelector(".playlist-ctn").innerHTML = '';
+        const playlistContainer = document.querySelector(".playlist-ctn");
+        if (!playlistContainer) {
+            throw new Error('Playlist container not found');
+        }
+        playlistContainer.innerHTML = '';
         
         // Create track items for each song
         listAudio.forEach((track, index) => {
-            createTrackItem(index, track.name, "00:00"); // We'll update duration when needed
+            createTrackItem(index, track.name, "00:00");
         });
         
         // Set up event listeners for playlist items
         const playListItems = document.querySelectorAll(".playlist-track-ctn");
         playListItems.forEach(item => {
-            item.addEventListener("click", getClickedElement);
+            item.addEventListener("click", (event) => {
+                const clickedIndex = parseInt(event.currentTarget.getAttribute("data-index"));
+                if (clickedIndex === indexAudio) {
+                    toggleAudio();
+                } else {
+                    loadNewTrack(clickedIndex);
+                }
+            });
         });
         
     } catch (error) {
@@ -114,11 +110,43 @@ async function loadMusicList() {
 }
 
 // Initialize the player when the page loads
-window.onload = async function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log('Player initializing...');
-    await loadMusicList();
-    console.log('Player initialized');
-};
+    try {
+        // Initialize audio element
+        currentAudio = document.getElementById("myAudio");
+        if (!currentAudio) {
+            throw new Error('Audio element not found');
+        }
+
+        // Set up audio event listeners
+        currentAudio.addEventListener('timeupdate', onTimeUpdate);
+        currentAudio.addEventListener('ended', () => {
+            if (indexAudio < listAudio.length - 1) {
+                loadNewTrack(indexAudio + 1);
+            }
+        });
+
+        // Load the music list
+        await loadMusicList();
+        
+        // Initialize the first track but don't play automatically
+        if (listAudio.length > 0) {
+            const firstTrackUrl = await getSignedUrl(listAudio[0].file.split('/').pop());
+            document.querySelector("#source-audio").src = firstTrackUrl;
+            document.querySelector(".title").innerHTML = listAudio[0].name;
+            currentAudio.load();
+            
+            // Set initial UI state
+            document.querySelector("#icon-play").style.display = "block";
+            document.querySelector("#icon-pause").style.display = "none";
+        }
+        
+        console.log('Player initialized');
+    } catch (error) {
+        console.error('Error initializing player:', error);
+    }
+});
 
 // Function to update all playlist icons
 function updatePlaylistIcons(playingIndex = -1) {
@@ -135,147 +163,91 @@ function updatePlaylistIcons(playingIndex = -1) {
     });
 }
 
-async function loadNewTrack(index) {
-    try {
-        console.log('Loading new track, index:', index);
-        const track = listAudio[index];
-        if (!track) {
-            throw new Error('Track not found');
-        }
-        
-        // Reset all icons to play state
-        updatePlaylistIcons(-1);
-        
-        // Get or create audio element
-        let audio = document.getElementById("myAudio");
-        if (!audio) {
-            console.log('Creating new audio element');
-            audio = document.createElement('audio');
-            audio.id = 'myAudio';
-            audio.preload = 'none'; // Changed from 'metadata' to 'none' for better iOS compatibility
-            document.body.appendChild(audio);
-        }
-        
-        // If there was a previously playing track, ensure it's paused and reset
-        if (currentAudio) {
-            currentAudio.pause();
-            currentAudio.currentTime = 0;
-        }
-        
-        console.log('Getting signed URL for:', track.file);
-        const audioUrl = await getSignedUrl(track.file);
-        if (!audioUrl) {
-            throw new Error('Failed to get signed URL');
-        }
-        console.log('Received signed URL:', audioUrl);
-        
-        // Clear any existing source
-        audio.src = '';
-        
-        // Set up event listeners
-        const canPlayPromise = new Promise((resolve, reject) => {
-            const handleCanPlay = () => {
-                console.log('Audio can play');
-                // Update duration display
-                const duration = formatTime(audio.duration);
-                document.querySelector(".duration").textContent = duration;
-                document.querySelector(`#ptc-${index} .playlist-duration`).textContent = duration;
-                
-                audio.removeEventListener('canplay', handleCanPlay);
-                audio.removeEventListener('error', handleError);
-                resolve();
-            };
-            
-            const handleError = (error) => {
-                console.error('Audio error in canPlayPromise:', error);
-                console.error('Audio element state:', {
-                    src: audio.src,
-                    error: audio.error,
-                    networkState: audio.networkState,
-                    readyState: audio.readyState
-                });
-                audio.removeEventListener('canplay', handleCanPlay);
-                audio.removeEventListener('error', handleError);
-                reject(error);
-            };
-            
-            audio.addEventListener('canplay', handleCanPlay);
-            audio.addEventListener('error', handleError);
-        });
-        
-        // Set the new source
-        audio.src = audioUrl;
-        
-        // Wait for the audio to be ready
-        await canPlayPromise;
-        
-        currentAudio = audio;
-        indexAudio = index;
-        
-        // Update UI
-        document.querySelector(".title").textContent = track.name;
-        
-        // Update active track in playlist
-        const playlistItems = document.querySelectorAll(".playlist-track-ctn");
-        playlistItems.forEach(item => item.classList.remove("active-track"));
-        const currentItem = document.querySelector(`#ptc-${index}`);
-        if (currentItem) {
-            currentItem.classList.add("active-track");
-        }
-        
-        // Update play/pause button
-        document.querySelector("#icon-play").style.display = "block";
-        document.querySelector("#icon-pause").style.display = "none";
-        
-        console.log('Track loaded successfully');
-        
-    } catch (error) {
-        console.error('Error loading track:', error);
-        // Reset the audio element on error
-        const audio = document.getElementById("myAudio");
-        if (audio) {
-            audio.src = '';
-        }
-        // Show error to user
-        document.querySelector(".title").textContent = "Error loading track";
+// Function to update playlist styling
+function updateStylePlaylist(oldIndex, newIndex) {
+    // Remove active class from old track
+    const oldTrack = document.querySelector("#ptc-" + oldIndex);
+    if (oldTrack) {
+        oldTrack.classList.remove("active-track");
+    }
+    
+    // Add active class to new track
+    const newTrack = document.querySelector("#ptc-" + newIndex);
+    if (newTrack) {
+        newTrack.classList.add("active-track");
+    }
+    
+    // Update play/pause icons
+    const oldIcon = document.querySelector("#p-img-" + oldIndex);
+    if (oldIcon) {
+        oldIcon.classList.remove("fa-pause");
+        oldIcon.classList.add("fa-play");
+    }
+    
+    const newIcon = document.querySelector("#p-img-" + newIndex);
+    if (newIcon) {
+        newIcon.classList.remove("fa-play");
+        newIcon.classList.add("fa-pause");
     }
 }
 
-function getClickedElement(event) {
-    const clickedItem = event.currentTarget;
-    const clickedIndex = parseInt(clickedItem.getAttribute("data-index"));
-    
-    if (clickedIndex === indexAudio && currentAudio) {
-        // If clicking the currently playing track, toggle play/pause
-        toggleAudio();
-    } else {
-        // If clicking a different track, load and play it
-        loadNewTrack(clickedIndex).then(() => {
-            // After loading, play the track and update UI
-            if (currentAudio) {
-                currentAudio.play();
-                // Update main play/pause button
-                document.querySelector("#icon-play").style.display = "none";
-                document.querySelector("#icon-pause").style.display = "block";
-                // Update playlist icon
-                updatePlaylistIcons(clickedIndex);
-            }
-        }).catch(error => {
-            console.error('Error playing track:', error);
-        });
+async function loadNewTrack(index) {
+    try {
+        if (!listAudio[index]) {
+            throw new Error('Track not found at index: ' + index);
+        }
+        
+        const filename = listAudio[index].file.split('/').pop();
+        const audioUrl = await getSignedUrl(filename);
+        
+        const player = document.querySelector("#source-audio");
+        const titleElement = document.querySelector(".title");
+        
+        if (!player || !titleElement || !currentAudio) {
+            throw new Error('Required audio elements not found');
+        }
+        
+        player.src = audioUrl;
+        titleElement.innerHTML = listAudio[index].name;
+        currentAudio.load();
+        
+        // Update UI
+        updateStylePlaylist(indexAudio, index);
+        indexAudio = index;
+        
+        // Don't automatically play on mobile
+        if (window.innerWidth > 768) { // Only autoplay on desktop
+            toggleAudio();
+        } else {
+            // On mobile, just update the UI
+            document.querySelector("#icon-play").style.display = "block";
+            document.querySelector("#icon-pause").style.display = "none";
+        }
+    } catch (error) {
+        console.error('Error loading track:', error);
     }
 }
 
 function toggleAudio() {
     if (!currentAudio) {
-        console.error('No audio element available');
+        console.error('Audio element not found');
+        return;
+    }
+    
+    const playIcon = document.querySelector("#icon-play");
+    const pauseIcon = document.querySelector("#icon-pause");
+    const currentTrack = document.querySelector("#ptc-" + indexAudio);
+    
+    if (!playIcon || !pauseIcon || !currentTrack) {
+        console.error('Required UI elements not found');
         return;
     }
     
     if (currentAudio.paused) {
-        document.querySelector("#icon-play").style.display = "none";
-        document.querySelector("#icon-pause").style.display = "block";
-        updatePlaylistIcons(indexAudio);
+        playIcon.style.display = "none";
+        pauseIcon.style.display = "block";
+        currentTrack.classList.add("active-track");
+        playToPause(indexAudio);
         
         // iOS requires user interaction to start audio
         const playPromise = currentAudio.play();
@@ -283,15 +255,15 @@ function toggleAudio() {
             playPromise.catch(error => {
                 console.error('Error playing audio:', error);
                 // Reset UI on error
-                document.querySelector("#icon-play").style.display = "block";
-                document.querySelector("#icon-pause").style.display = "none";
-                updatePlaylistIcons(-1);
+                playIcon.style.display = "block";
+                pauseIcon.style.display = "none";
+                pauseToPlay(indexAudio);
             });
         }
     } else {
-        document.querySelector("#icon-play").style.display = "block";
-        document.querySelector("#icon-pause").style.display = "none";
-        updatePlaylistIcons(-1);
+        playIcon.style.display = "block";
+        pauseIcon.style.display = "none";
+        pauseToPlay(indexAudio);
         currentAudio.pause();
     }
 }
@@ -357,3 +329,31 @@ function toggleMute() {
         volUp.style.display = "block";
     }
 }
+
+// Add touch event support for mobile
+function setupMobileSupport() {
+    const playPauseBtn = document.querySelector("#btn-faws-play-pause");
+    if (playPauseBtn) {
+        playPauseBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault(); // Prevent double-tap zoom
+            toggleAudio();
+        });
+    }
+    
+    // Add touch support for playlist items
+    const playlistItems = document.querySelectorAll(".playlist-track-ctn");
+    playlistItems.forEach(item => {
+        item.addEventListener('touchstart', function(e) {
+            e.preventDefault(); // Prevent double-tap zoom
+            const clickedIndex = parseInt(this.getAttribute("data-index"));
+            if (clickedIndex === indexAudio) {
+                toggleAudio();
+            } else {
+                loadNewTrack(clickedIndex);
+            }
+        });
+    });
+}
+
+// Call setupMobileSupport after DOM is loaded
+document.addEventListener('DOMContentLoaded', setupMobileSupport);
