@@ -122,6 +122,12 @@ app.get('/get-signed-url', async (req, res) => {
 
     console.log('=== S3 Operation Debug ===');
     console.log('Requested key:', key);
+    console.log('Environment variables:', {
+      NODE_ENV: process.env.NODE_ENV,
+      AWS_REGION: process.env.AWS_REGION,
+      S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
+      CLOUDFRONT_DOMAIN: process.env.CLOUDFRONT_DOMAIN
+    });
     
     const params = {
       Bucket: process.env.S3_BUCKET_NAME,
