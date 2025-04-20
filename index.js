@@ -42,17 +42,17 @@ app.get('/test-s3', async (req, res) => {
         
         // List objects in the bucket
         const params = {
-            Bucket: bucketName,
+            Bucket: process.env.S3_BUCKET_NAME,
             MaxKeys: 5
         };
         
-        console.log('Listing objects in bucket:', bucketName);
+        console.log('Listing objects in bucket:', process.env.S3_BUCKET_NAME);
         const data = await s3.listObjectsV2(params).promise();
         
         console.log('S3 test successful. Found objects:', data.Contents.map(obj => obj.Key));
         res.json({
             success: true,
-            bucket: bucketName,
+            bucket: process.env.S3_BUCKET_NAME,
             objects: data.Contents.map(obj => ({
                 key: obj.Key,
                 size: obj.Size,
@@ -65,6 +65,38 @@ app.get('/test-s3', async (req, res) => {
             success: false,
             error: error.message,
             code: error.code
+        });
+    }
+});
+
+// Test endpoint to verify CloudFront connectivity
+app.get('/test-cloudfront', async (req, res) => {
+    try {
+        const testKey = req.query.key || 'daPreacher3.0.mp3'; // Use a known existing file
+        const cloudfrontUrl = `https://${process.env.CLOUDFRONT_DOMAIN}/${testKey}`;
+        
+        console.log('Testing CloudFront URL:', cloudfrontUrl);
+        
+        // Try to fetch the file
+        const response = await fetch(cloudfrontUrl);
+        const status = response.status;
+        
+        console.log('CloudFront test response:', {
+            status,
+            headers: Object.fromEntries(response.headers.entries())
+        });
+        
+        res.json({
+            success: status === 200,
+            url: cloudfrontUrl,
+            status,
+            headers: Object.fromEntries(response.headers.entries())
+        });
+    } catch (error) {
+        console.error('CloudFront test failed:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
         });
     }
 });
