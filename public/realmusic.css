@@ -172,3 +172,45 @@ body {
     padding-top: 1rem; /* Adds some space between the player controls and the playlist */
   }
 }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .player-ctn {
+        margin: 10px;
+        padding: 15px;
+    }
+
+    .title {
+        font-size: 1.8rem;
+        margin-bottom: 20px;
+    }
+
+    .progress-ctn {
+        height: 12px;
+        margin: 20px 0;
+    }
+
+    .timer {
+        font-size: 1.2rem;
+    }
+
+    .control-btn {
+        font-size: 2rem;
+        padding: 15px;
+    }
+
+    .playlist-track-ctn {
+        padding: 20px;
+        margin-bottom: 15px;
+    }
+
+    .playlist-btn-play {
+        font-size: 1.5rem;
+        margin-right: 20px;
+    }
+
+    .playlist-info-track,
+    .playlist-duration {
+        font-size: 32px;
+    }
+}
