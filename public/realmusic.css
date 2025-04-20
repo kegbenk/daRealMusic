@@ -2,7 +2,7 @@ body {
   background-color: #2d2d2d;
   color: #ffc266;
   font-family: "Roboto", sans-serif;
-  font-size: 32px; /* Increased font size for better readability */
+  font-size: 16px; /* Reset base font size */
 }
 
 .controls {
@@ -99,10 +99,10 @@ body {
 }
 .playlist-info-track,
 .playlist-duration {
-  padding-top: 10px; /* Increased padding for better spacing */
-  padding-bottom: 10px; /* Increased padding for better spacing */
+  padding-top: 10px;
+  padding-bottom: 10px;
   color: #e9cc95;
-  font-size: 18px; /* Increased font size for better readability */
+  font-size: 18px; /* Base font size for desktop */
   pointer-events: none;
 }
 .playlist-ctn {
@@ -134,55 +134,29 @@ body {
   font-size: 24px; /* Increased font size for better visibility */
 }
 
-/* Media Queries */
-@media only screen and (max-device-width: 414px) and (orientation: portrait) {
-  /* Adjust styles for larger screens */
-  .player-ctn {
-    margin-top: 50px; /* Example adjustment for larger screens */
-    width: 98%;
-    position: -webkit-sticky; /* Safari */
-    position: sticky;
-    top: 0; /* Set the top positioning to 0 to stick it at the top of the viewport */
-    z-index: 1000; /* Higher z-index to ensure it stays on top of other content */
-    background-color: #373737;
-  }
+/* Mobile styles */
+@media screen and (max-width: 430px),
+       screen and (max-width: 428px),
+       screen and (max-device-width: 428px),
+       screen and (max-width: 414px),
+       screen and (max-device-width: 414px),
+       screen and (max-width: 390px),
+       screen and (max-device-width: 390px) {
+    body {
+        font-size: 16px;
+    }
 
-  .playlist-track-ctn {
-    padding: 15px;
-  }
-
-  .playlist-info-track,
-  .playlist-duration {
-    font-size: 41px; /* Increased font size for better readability */
-  }
-  body {
-    font-size: 42px;
-  }
-  .btn-ctn > div {
-    padding: 37px;
-  }
-  .fas {
-    font-size: 50px;
-  }
-  .playlist-ctn {
-    overflow-y: auto; /* Makes the playlist container scrollable */
-    max-height: calc(
-      100vh - 150px
-    ); /* Adjust the max-height accordingly to your player-ctn's height */
-    padding-top: 1rem; /* Adds some space between the player controls and the playlist */
-  }
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
     .player-ctn {
         margin: 10px;
         padding: 15px;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .title {
         font-size: 1.8rem;
         margin-bottom: 20px;
+        text-align: center;
     }
 
     .progress-ctn {
@@ -202,6 +176,8 @@ body {
     .playlist-track-ctn {
         padding: 20px;
         margin-bottom: 15px;
+        display: flex;
+        align-items: center;
     }
 
     .playlist-btn-play {
@@ -209,8 +185,24 @@ body {
         margin-right: 20px;
     }
 
-    .playlist-info-track,
+    .playlist-info-track {
+        font-size: 32px !important;
+        padding: 15px 0;
+        color: #e9cc95 !important;
+        flex: 1;
+        margin-right: 15px;
+    }
+
     .playlist-duration {
-        font-size: 32px;
+        font-size: 32px !important;
+        padding: 15px 0;
+        color: #e9cc95 !important;
+        min-width: 80px;
+        text-align: right;
+    }
+
+    .playlist-ctn {
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
     }
 }
