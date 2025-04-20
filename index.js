@@ -12,6 +12,13 @@ const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
 const port = process.env.PORT || 3000;
 
+// Debug logging
+console.log('Environment Variables:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('AWS_REGION:', process.env.AWS_REGION);
+console.log('S3_BUCKET_NAME:', process.env.S3_BUCKET_NAME);
+console.log('CLOUDFRONT_DOMAIN:', process.env.CLOUDFRONT_DOMAIN);
+
 app.use(express.static(path.join(__dirname, "public")));
 
 // Function to generate signed URL for a music file
@@ -54,7 +61,10 @@ app.get("/api/music/:filename", async (req, res) => {
 app.get('/get-signed-url', async (req, res) => {
     try {
         const key = req.query.key;
+        console.log('Requested key:', key);
+        
         if (!key) {
+            console.error('No key provided in request');
             return res.status(400).json({ error: 'Key parameter is required' });
         }
 
@@ -65,7 +75,20 @@ app.get('/get-signed-url', async (req, res) => {
             Expires: 3600 // URL expires in 1 hour
         };
 
+        console.log('S3 Params:', JSON.stringify(params, null, 2));
+
+        // Check if the object exists
+        try {
+            await s3.headObject(params).promise();
+            console.log('Object exists in S3');
+        } catch (error) {
+            console.error('Error checking object in S3:', error);
+            return res.status(404).json({ error: 'File not found in S3' });
+        }
+
         const url = await s3.getSignedUrlPromise('getObject', params);
+        console.log('Generated signed URL:', url);
+        
         res.json({ url });
     } catch (error) {
         console.error('Error generating signed URL:', error);

@@ -51,21 +51,48 @@ jobs:
                 listen 80;
                 server_name _;
                 
+                # Increase buffer size for large file uploads
+                client_max_body_size 100M;
+                
+                # Proxy settings
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade \$http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host \$host;
+                proxy_cache_bypass \$http_upgrade;
+                proxy_set_header X-Real-IP \$remote_addr;
+                proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto \$scheme;
+                
+                # Timeout settings
+                proxy_connect_timeout 600;
+                proxy_send_timeout 600;
+                proxy_read_timeout 600;
+                send_timeout 600;
+                
                 location / {
                     proxy_pass http://localhost:3000;
-                    proxy_http_version 1.1;
-                    proxy_set_header Upgrade \$http_upgrade;
-                    proxy_set_header Connection 'upgrade';
-                    proxy_set_header Host \$host;
-                    proxy_cache_bypass \$http_upgrade;
+                }
+                
+                # Error pages
+                error_page 500 502 503 504 /50x.html;
+                location = /50x.html {
+                    root /usr/share/nginx/html;
                 }
             }
             EOF
             
             # Enable the site and restart Nginx
+            echo "Enabling Nginx site..."
             sudo ln -sf /etc/nginx/sites-available/music-player /etc/nginx/sites-enabled/
             sudo rm -f /etc/nginx/sites-enabled/default
+            
+            # Test Nginx configuration
+            echo "Testing Nginx configuration..."
             sudo nginx -t
+            
+            # Restart Nginx
+            echo "Restarting Nginx..."
             sudo systemctl restart nginx
             
             # Create directory with proper permissions
@@ -120,6 +147,7 @@ jobs:
             npm install
             sudo systemctl restart music-player
             
-            # Debug: Verify service is running
-            echo "Checking service status:"
+            # Debug: Verify services are running
+            echo "Checking service statuses:"
+            sudo systemctl status nginx
             sudo systemctl status music-player 
