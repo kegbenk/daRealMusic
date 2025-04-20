@@ -344,3 +344,43 @@ body {
         color: #ffc266 !important;
     }
 }
+
+/* Header styles */
+.app-header {
+    background-color: #373737;
+    padding: 20px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.app-header h1 {
+    color: #ffc266;
+    font-size: 1.8rem;
+    margin: 0;
+    font-weight: bold;
+    text-align: center;
+    width: 100%;
+}
+
+/* Mobile styles */
+@media screen and (max-width: 430px),
+       screen and (max-width: 428px),
+       screen and (max-device-width: 428px),
+       screen and (max-width: 414px),
+       screen and (max-device-width: 414px),
+       screen and (max-width: 390px),
+       screen and (max-device-width: 390px) {
+    .app-header {
+        padding: 15px;
+    }
+
+    .app-header h1 {
+        font-size: 1.6rem;
+    }
+
+    /* ... rest of the mobile styles ... */
+}
