@@ -2,7 +2,7 @@ body {
   background-color: #2d2d2d;
   color: #ffc266;
   font-family: "Roboto", sans-serif;
-  font-size: 16px; /* Reset base font size */
+  font-size: 32px; /* Increased font size for better readability */
 }
 
 .controls {
@@ -68,6 +68,7 @@ body {
 
 .title {
   margin-left: 70px; /* Increased margin for better spacing */
+  margin-right: 70px; /* Increased margin for better spacing */
   width: 250px; /* Increased width for better readability */
   text-align: center;
 }
@@ -99,10 +100,10 @@ body {
 }
 .playlist-info-track,
 .playlist-duration {
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-top: 10px; /* Increased padding for better spacing */
+  padding-bottom: 10px; /* Increased padding for better spacing */
   color: #e9cc95;
-  font-size: 18px; /* Base font size for desktop */
+  font-size: 18px; /* Increased font size for better readability */
   pointer-events: none;
 }
 .playlist-ctn {
@@ -134,29 +135,55 @@ body {
   font-size: 24px; /* Increased font size for better visibility */
 }
 
-/* Mobile styles */
-@media screen and (max-width: 430px),
-       screen and (max-width: 428px),
-       screen and (max-device-width: 428px),
-       screen and (max-width: 414px),
-       screen and (max-device-width: 414px),
-       screen and (max-width: 390px),
-       screen and (max-device-width: 390px) {
-    body {
-        font-size: 16px;
-    }
+/* Media Queries */
+@media only screen and (max-device-width: 414px) and (orientation: portrait) {
+  /* Adjust styles for larger screens */
+  .player-ctn {
+    margin-top: 50px; /* Example adjustment for larger screens */
+    width: 98%;
+    position: -webkit-sticky; /* Safari */
+    position: sticky;
+    top: 0; /* Set the top positioning to 0 to stick it at the top of the viewport */
+    z-index: 1000; /* Higher z-index to ensure it stays on top of other content */
+    background-color: #373737;
+  }
 
+  .playlist-track-ctn {
+    padding: 15px;
+  }
+
+  .playlist-info-track,
+  .playlist-duration {
+    font-size: 41px; /* Increased font size for better readability */
+  }
+  body {
+    font-size: 42px;
+  }
+  .btn-ctn > div {
+    padding: 37px;
+  }
+  .fas {
+    font-size: 50px;
+  }
+  .playlist-ctn {
+    overflow-y: auto; /* Makes the playlist container scrollable */
+    max-height: calc(
+      100vh - 150px
+    ); /* Adjust the max-height accordingly to your player-ctn's height */
+    padding-top: 1rem; /* Adds some space between the player controls and the playlist */
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
     .player-ctn {
         margin: 10px;
         padding: 15px;
-        width: 100%;
-        box-sizing: border-box;
     }
 
     .title {
         font-size: 1.8rem;
         margin-bottom: 20px;
-        text-align: center;
     }
 
     .progress-ctn {
@@ -176,8 +203,6 @@ body {
     .playlist-track-ctn {
         padding: 20px;
         margin-bottom: 15px;
-        display: flex;
-        align-items: center;
     }
 
     .playlist-btn-play {
@@ -185,24 +210,137 @@ body {
         margin-right: 20px;
     }
 
+    .playlist-info-track,
+    .playlist-duration {
+        font-size: 32px;
+    }
+}
+
+/* Mobile styles */
+@media screen and (max-width: 430px),
+       screen and (max-width: 428px),
+       screen and (max-device-width: 428px),
+       screen and (max-width: 414px),
+       screen and (max-device-width: 414px),
+       screen and (max-width: 390px),
+       screen and (max-device-width: 390px) {
+    body {
+        font-size: 16px;
+    }
+
+    .player-ctn {
+        margin: 10px;
+        padding: 20px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .title {
+        font-size: 2.2rem;
+        margin-bottom: 25px;
+        text-align: center;
+        color: #ffc266;
+    }
+
+    #myProgress {
+        width: 100%;
+        background-color: #d9d9f2;
+        cursor: pointer;
+        border-radius: 10px;
+        margin: 25px 0;
+        height: 15px;
+    }
+
+    #myBar {
+        width: 0%;
+        height: 100%;
+        background-color: #ffc266;
+        border-radius: 10px;
+    }
+
+    .timer, .duration {
+        font-size: 1.5rem;
+        color: #ffc266;
+        margin: 10px 0;
+    }
+
+    .btn-ctn {
+        margin: 30px 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .btn-action, .btn-play, .btn-mute {
+        padding: 35px;
+        width: 100px;
+        height: 100px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .btn-action:active, .btn-play:active, .btn-mute:active {
+        transform: scale(0.95);
+    }
+
+    .fas {
+        font-size: 4rem;
+        color: #ffc266;
+    }
+
+    .svg-inline--fa {
+        width: 2em !important;
+        height: 2em !important;
+    }
+
+    .playlist-track-ctn {
+        padding: 25px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        background-color: #464646;
+        border-radius: 12px;
+    }
+
+    .playlist-btn-play {
+        font-size: 2rem;
+        margin-right: 25px;
+    }
+
     .playlist-info-track {
         font-size: 32px !important;
         padding: 15px 0;
         color: #e9cc95 !important;
         flex: 1;
-        margin-right: 15px;
+        margin-right: 20px;
     }
 
     .playlist-duration {
         font-size: 32px !important;
         padding: 15px 0;
         color: #e9cc95 !important;
-        min-width: 80px;
+        min-width: 100px;
         text-align: right;
     }
 
     .playlist-ctn {
-        max-height: calc(100vh - 200px);
+        max-height: calc(100vh - 250px);
         overflow-y: auto;
+        padding: 10px 0;
+    }
+
+    .active-track {
+        background-color: #4d4d4d;
+        border-left: 5px solid #ffc266;
+    }
+
+    .active-track .playlist-info-track,
+    .active-track .playlist-duration,
+    .active-track .playlist-btn-play {
+        color: #ffc266 !important;
     }
 }
