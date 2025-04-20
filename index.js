@@ -2,18 +2,17 @@ const express = require("express");
 const path = require("path");
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
-const { s3, bucketName, cloudfrontDomain } = require('./config/aws');
+const { s3, bucketName, cloudfrontDomain, awsConfig } = require('./config/aws');
 
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
 const port = process.env.PORT || 3000;
 
 // Debug logging
-console.log('Environment Variables:');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('AWS_REGION:', process.env.AWS_REGION);
-console.log('S3_BUCKET_NAME:', bucketName);
-console.log('CLOUDFRONT_DOMAIN:', cloudfrontDomain);
+console.log('AWS Configuration:');
+console.log('Region:', awsConfig.region);
+console.log('Bucket Name:', bucketName);
+console.log('CloudFront Domain:', cloudfrontDomain);
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -26,6 +25,8 @@ async function getSignedUrl(key) {
     };
     
     try {
+        console.log('Attempting to get signed URL with params:', JSON.stringify(params, null, 2));
+        
         // Check if the object exists
         await s3.headObject(params).promise();
         console.log('Object exists in S3:', key);
