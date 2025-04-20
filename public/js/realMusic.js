@@ -2,7 +2,7 @@
 async function getSignedUrl(songKey) {
     try {
         console.log('Requesting signed URL for:', songKey);
-        const response = await fetch(`/get-signed-url?key=${encodeURIComponent(songKey)}`);
+        const response = await fetch(`/get-signed-url?key=music/${songKey}`);
         
         if (!response.ok) {
             const errorData = await response.json();

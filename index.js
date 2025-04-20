@@ -86,13 +86,18 @@ app.get('/get-signed-url', async (req, res) => {
             return res.status(404).json({ error: 'File not found in S3' });
         }
 
-        const url = await s3.getSignedUrlPromise('getObject', params);
-        console.log('Generated signed URL:', url);
-        
-        res.json({ url });
+        // Generate signed URL
+        try {
+            const url = await s3.getSignedUrlPromise('getObject', params);
+            console.log('Generated signed URL:', url);
+            res.json({ url });
+        } catch (error) {
+            console.error('Error generating signed URL:', error);
+            res.status(500).json({ error: 'Failed to generate signed URL', details: error.message });
+        }
     } catch (error) {
-        console.error('Error generating signed URL:', error);
-        res.status(500).json({ error: 'Failed to generate signed URL' });
+        console.error('Error in get-signed-url route:', error);
+        res.status(500).json({ error: 'Internal server error', details: error.message });
     }
 });
 
