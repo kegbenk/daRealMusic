@@ -138,15 +138,25 @@ app.get('/get-signed-url', async (req, res) => {
     console.log('Attempting to check if object exists...');
 
     try {
-      await s3.headObject(params).promise();
-      console.log('Object exists in S3');
+      const headObject = await s3.headObject(params).promise();
+      console.log('Object exists in S3:', {
+        ContentType: headObject.ContentType,
+        ContentLength: headObject.ContentLength,
+        LastModified: headObject.LastModified
+      });
       
       // Return direct CloudFront URL
       const directUrl = `https://${process.env.CLOUDFRONT_DOMAIN}/${key}`;
       console.log('Generated direct URL:', directUrl);
       res.json({ url: directUrl });
     } catch (error) {
-      console.error('S3 operation failed:', error);
+      console.error('S3 operation failed:', {
+        code: error.code,
+        message: error.message,
+        statusCode: error.statusCode,
+        time: error.time,
+        requestId: error.requestId
+      });
       if (error.code === 'NotFound') {
         return res.status(404).json({ 
           error: 'File not found',
