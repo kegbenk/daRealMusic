@@ -26,7 +26,7 @@ The application consists of:
 
 ## Environment Variables
 
-Create a `.env` file in the root directory with the following variables:
+Create a `.env` file in the root directory with the following variablez:
 
 ```env
 NODE_ENV=production
