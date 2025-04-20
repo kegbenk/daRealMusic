@@ -17,14 +17,11 @@ async function getSignedUrl(songKey) {
             return `/music/${songKey}`;
         } else {
             // In production, get signed URL from the server
-            const url = `/get-signed-url?key=music/${songKey}`;
-            console.log('Making request to:', url);
-            
-            const response = await fetch(url);
+            const response = await fetch(`/get-signed-url?key=${encodeURIComponent(songKey)}`);
             
             if (!response.ok) {
                 const errorData = await response.json();
-                console.error('Failed to get signed URL:', errorData);
+                console.error('Error getting signed URL:', errorData);
                 throw new Error(errorData.error || 'Failed to get signed URL');
             }
             
@@ -33,7 +30,7 @@ async function getSignedUrl(songKey) {
             return data.url;
         }
     } catch (error) {
-        console.error('Error getting signed URL:', error);
+        console.error('Error in getSignedUrl:', error);
         throw error;
     }
 }

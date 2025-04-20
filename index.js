@@ -127,37 +127,42 @@ app.get("/api/music/:filename", async (req, res) => {
 
 // Route to get signed URL for a song
 app.get('/get-signed-url', async (req, res) => {
-    console.log('\n=== API Request Debug ===');
-    console.log('Request received at:', new Date().toISOString());
-    console.log('Query parameters:', req.query);
-    
-    try {
-        const key = req.query.key;
-        if (!key) {
-            console.error('No key provided in request');
-            return res.status(400).json({ error: 'Key parameter is required' });
-        }
+    const key = req.query.key;
+    if (!key) {
+        console.error('Missing key parameter');
+        return res.status(400).json({ error: 'Key parameter is required' });
+    }
 
-        console.log('Processing request for key:', key);
-        const signedUrl = await getSignedUrl(key);
-        console.log('Request completed successfully');
-        res.json({ url: signedUrl });
-    } catch (error) {
-        console.error('API Error:', {
-            code: error.code,
-            message: error.message,
-            stack: error.stack
+    console.log('=== S3 Operation Debug ===');
+    console.log('Requested key:', key);
+    
+    const params = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: key
+    };
+    
+    console.log('S3 HeadObject Parameters:', JSON.stringify(params, null, 2));
+    console.log('Attempting to check if object exists...');
+
+    try {
+        // First check if the object exists
+        await s3.headObject(params).promise();
+        console.log('Object exists in S3');
+
+        // Generate signed URL
+        const signedUrl = s3.getSignedUrl('getObject', {
+            ...params,
+            Expires: 3600 // URL expires in 1 hour
         });
         
-        if (error.code === 'NotFound') {
-            res.status(404).json({ error: 'File not found in S3' });
-        } else {
-            res.status(500).json({ 
-                error: 'Failed to generate signed URL', 
-                details: error.message,
-                code: error.code
-            });
-        }
+        console.log('Generated signed URL successfully');
+        res.json({ url: signedUrl });
+    } catch (error) {
+        console.error('S3 Operation Error:', error);
+        res.status(404).json({ 
+            error: 'File not found',
+            details: error.message
+        });
     }
 });
 
