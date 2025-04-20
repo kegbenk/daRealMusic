@@ -1,0 +1,15 @@
+[Unit]
+Description=Music Player Node.js Application
+After=network.target
+
+[Service]
+Type=simple
+User=bitnami
+WorkingDirectory=/opt/bitnami/apps/music-player
+EnvironmentFile=/opt/bitnami/apps/music-player/.env
+ExecStart=/opt/bitnami/node/bin/node index.js
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target 

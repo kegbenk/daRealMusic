@@ -27,21 +27,25 @@ async function getSignedUrl(key) {
     console.log('\n=== S3 Operation Debug ===');
     console.log('Requested key:', key);
     
-    const params = {
+    const headParams = {
         Bucket: bucketName,
-        Key: key,
-        Expires: 3600
+        Key: key
     };
     
-    console.log('S3 Parameters:', JSON.stringify(params, null, 2));
+    console.log('S3 HeadObject Parameters:', JSON.stringify(headParams, null, 2));
     
     try {
         console.log('Attempting to check if object exists...');
-        await s3.headObject(params).promise();
+        await s3.headObject(headParams).promise();
         console.log('Object exists in S3');
         
         console.log('Generating signed URL...');
-        const url = await s3.getSignedUrlPromise('getObject', params);
+        const signedUrlParams = {
+            Bucket: bucketName,
+            Key: key,
+            Expires: 3600
+        };
+        const url = await s3.getSignedUrlPromise('getObject', signedUrlParams);
         console.log('Signed URL generated successfully');
         return url;
     } catch (error) {

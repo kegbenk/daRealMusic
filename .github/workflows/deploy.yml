@@ -8,10 +8,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v2
         with:
           node-version: '18'
           
@@ -25,129 +25,44 @@ jobs:
           username: bitnami
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           source: "."
-          target: "/tmp/music-player"
+          target: "/opt/bitnami/apps/music-player"
           strip_components: 0
           
-      - name: Setup and restart service
+      - name: Install dependencies on server
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: bitnami
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           script: |
-            # Stop Apache
-            echo "Stopping Apache..."
-            sudo /opt/bitnami/ctlscript.sh stop apache
+            cd /opt/bitnami/apps/music-player
+            npm install --production
             
-            # Install Nginx if not already installed
-            echo "Installing Nginx..."
-            sudo apt-get update
-            sudo apt-get install -y nginx
-            
-            # Create Nginx configuration
-            echo "Setting up Nginx configuration..."
-            sudo tee /etc/nginx/sites-available/music-player << EOF
-            server {
-                listen 80;
-                server_name _;
-                
-                # Increase buffer size for large file uploads
-                client_max_body_size 100M;
-                
-                # Proxy settings
-                proxy_http_version 1.1;
-                proxy_set_header Upgrade \$http_upgrade;
-                proxy_set_header Connection 'upgrade';
-                proxy_set_header Host \$host;
-                proxy_cache_bypass \$http_upgrade;
-                proxy_set_header X-Real-IP \$remote_addr;
-                proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto \$scheme;
-                
-                # Timeout settings
-                proxy_connect_timeout 600;
-                proxy_send_timeout 600;
-                proxy_read_timeout 600;
-                send_timeout 600;
-                
-                location / {
-                    proxy_pass http://localhost:3000;
-                }
-                
-                # Error pages
-                error_page 500 502 503 504 /50x.html;
-                location = /50x.html {
-                    root /usr/share/nginx/html;
-                }
-            }
-            EOF
-            
-            # Enable the site and restart Nginx
-            echo "Enabling Nginx site..."
-            sudo ln -sf /etc/nginx/sites-available/music-player /etc/nginx/sites-enabled/
-            sudo rm -f /etc/nginx/sites-enabled/default
-            
-            # Test Nginx configuration
-            echo "Testing Nginx configuration..."
-            sudo nginx -t
-            
-            # Restart Nginx
-            echo "Restarting Nginx..."
-            sudo systemctl restart nginx
-            
-            # Create directory with proper permissions
-            echo "Setting up application directory..."
-            sudo mkdir -p /opt/bitnami/apps/music-player
-            sudo chown -R bitnami:bitnami /opt/bitnami/apps/music-player
-            
-            # Copy files from temp directory
-            echo "Copying application files..."
-            sudo cp -r /tmp/music-player/* /opt/bitnami/apps/music-player/
-            sudo chown -R bitnami:bitnami /opt/bitnami/apps/music-player/*
-            
-            # Create environment file
-            echo "Creating environment file..."
-            sudo tee /opt/bitnami/apps/music-player/.env << EOF
+      - name: Create .env file
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: bitnami
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          script: |
+            cat > /opt/bitnami/apps/music-player/.env << 'EOL'
             NODE_ENV=production
             AWS_REGION=us-east-1
             AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
             AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
             S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
             CLOUDFRONT_DOMAIN=${{ secrets.CLOUDFRONT_DOMAIN }}
-            EOF
+            EOL
+            chmod 600 /opt/bitnami/apps/music-player/.env
             
-            # Create service file
-            echo "Creating service file..."
-            sudo tee /etc/systemd/system/music-player.service << EOF
-            [Unit]
-            Description=Music Player Node.js Application
-            After=network.target
-
-            [Service]
-            Type=simple
-            User=bitnami
-            WorkingDirectory=/opt/bitnami/apps/music-player
-            ExecStart=/opt/bitnami/node/bin/node index.js
-            Restart=on-failure
-            Environment=NODE_ENV=production
-            Environment=PORT=3000
-
-            [Install]
-            WantedBy=multi-user.target
-            EOF
-            
-            # Reload systemd and enable service
-            echo "Setting up systemd service..."
+      - name: Update systemd service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: bitnami
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          script: |
+            sudo cp /opt/bitnami/apps/music-player/music-player.service /etc/systemd/system/
+            sudo chmod 644 /etc/systemd/system/music-player.service
             sudo systemctl daemon-reload
-            sudo systemctl enable music-player
-            
-            # Install dependencies and restart service
-            echo "Installing dependencies and starting service..."
-            cd /opt/bitnami/apps/music-player
-            npm install
-            sudo systemctl restart music-player
-            
-            # Debug: Verify services are running
-            echo "Checking service statuses:"
-            sudo systemctl status nginx
-            sudo systemctl status music-player 
+            sudo systemctl restart music-player 
