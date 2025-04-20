@@ -264,9 +264,49 @@ app.get('/get-music-metadata', async (req, res) => {
 // Modify the existing list-music endpoint to use metadata
 app.get('/list-music', async (req, res) => {
     try {
-        const response = await fetch(`${process.env.API_URL}/get-music-metadata`);
-        const metadata = await response.json();
-        res.json(metadata);
+        const params = {
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: 'music_metadata.json'
+        };
+
+        try {
+            // Try to get the metadata file
+            const data = await s3.getObject(params).promise();
+            res.json(JSON.parse(data.Body.toString()));
+        } catch (error) {
+            if (error.code === 'NoSuchKey') {
+                // If metadata file doesn't exist, create it
+                const listParams = {
+                    Bucket: process.env.S3_BUCKET_NAME
+                };
+                
+                const listData = await s3.listObjectsV2(listParams).promise();
+                const mp3Files = listData.Contents.filter(item => item.Key.endsWith('.mp3'));
+                
+                // Create metadata array
+                const metadata = mp3Files.map(file => ({
+                    file: file.Key,
+                    name: file.Key.replace('.mp3', ''),
+                    lastModified: file.LastModified,
+                    size: file.Size
+                }));
+
+                // Sort by last modified date
+                metadata.sort((a, b) => b.lastModified - a.lastModified);
+
+                // Upload metadata file
+                await s3.putObject({
+                    Bucket: process.env.S3_BUCKET_NAME,
+                    Key: 'music_metadata.json',
+                    Body: JSON.stringify(metadata),
+                    ContentType: 'application/json'
+                }).promise();
+
+                res.json(metadata);
+            } else {
+                throw error;
+            }
+        }
     } catch (error) {
         console.error('Error listing music:', error);
         res.status(500).json({ error: 'Failed to list music' });
