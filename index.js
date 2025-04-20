@@ -4,6 +4,7 @@ const path = require("path");
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const { s3, bucketName, cloudfrontDomain, awsConfig } = require('./config/aws');
+const AWS = require('aws-sdk');
 
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
@@ -112,51 +113,52 @@ app.get("/", async (req, res) => {
 
 // Route to get signed URL for a song
 app.get('/get-signed-url', async (req, res) => {
+  try {
     const key = req.query.key;
     if (!key) {
-        console.error('Missing key parameter');
-        return res.status(400).json({ error: 'Key parameter is required' });
+      console.error('Missing key parameter');
+      return res.status(400).json({ error: 'Missing key parameter' });
     }
 
     console.log('=== S3 Operation Debug ===');
     console.log('Requested key:', key);
     
     const params = {
-        Bucket: process.env.S3_BUCKET_NAME,
-        Key: key
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: key
     };
     
     console.log('S3 HeadObject Parameters:', JSON.stringify(params, null, 2));
     console.log('Attempting to check if object exists...');
 
     try {
-        // First check if the object exists
-        await s3.headObject(params).promise();
-        console.log('Object exists in S3');
-
-        // Generate signed URL
-        const signedUrl = s3.getSignedUrl('getObject', {
-            ...params,
-            Expires: 3600 // URL expires in 1 hour
-        });
-        
-        console.log('Generated signed URL successfully');
-        res.json({ url: signedUrl });
+      await s3.headObject(params).promise();
+      console.log('Object exists in S3');
+      
+      // Return direct CloudFront URL
+      const directUrl = `https://${process.env.CLOUDFRONT_DOMAIN}/${key}`;
+      console.log('Generated direct URL:', directUrl);
+      res.json({ url: directUrl });
     } catch (error) {
-        console.error('S3 Operation Error:', error);
-        if (error.code === 'NotFound') {
-            res.status(404).json({ 
-                error: 'File not found',
-                details: `The file "${key}" does not exist in the S3 bucket`
-            });
-        } else {
-            res.status(500).json({ 
-                error: 'S3 operation failed',
-                details: error.message,
-                code: error.code
-            });
-        }
+      console.error('S3 operation failed:', error);
+      if (error.code === 'NotFound') {
+        return res.status(404).json({ 
+          error: 'File not found',
+          details: `The file ${key} does not exist in the bucket`
+        });
+      }
+      return res.status(500).json({ 
+        error: 'Failed to generate URL',
+        details: error.message
+      });
     }
+  } catch (error) {
+    console.error('Error in get-signed-url:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message
+    });
+  }
 });
 
 // Start the server
