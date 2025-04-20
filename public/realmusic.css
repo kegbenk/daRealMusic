@@ -73,11 +73,11 @@ body {
 }
 
 .player-ctn {
-  position: -webkit-sticky; /* Safari */
+  position: -webkit-sticky;
   position: sticky;
-  top: 0; /* Set the top positioning to 0 to stick it at the top of the viewport */
-  z-index: 1000; /* Higher z-index to ensure it stays on top of other content */
-  background-color: #373737; /* Optional: to ensure text readability against possible background content scrolling underneath */
+  top: 27px; /* Height of header (11px) + padding (16px) */
+  z-index: 1000;
+  background-color: #373737;
 }
 
 .playlist-track-ctn {
@@ -135,40 +135,95 @@ body {
 }
 
 /* Media Queries */
-@media only screen and (max-device-width: 414px) and (orientation: portrait) {
-  /* Adjust styles for larger screens */
+@media only screen and (max-device-width: 700px) and (orientation: portrait) {
+  /* Adjust styles for mobile screens */
   .player-ctn {
-    margin-top: 50px; /* Example adjustment for larger screens */
+    margin-top: 50px;
     width: 98%;
     position: -webkit-sticky; /* Safari */
     position: sticky;
-    top: 0; /* Set the top positioning to 0 to stick it at the top of the viewport */
-    z-index: 1000; /* Higher z-index to ensure it stays on top of other content */
+    top: 0;
+    z-index: 1000;
     background-color: #373737;
   }
 
   .playlist-track-ctn {
-    padding: 15px;
+    padding: 20px;
+    margin: 10px 0;
   }
 
-  .playlist-info-track,
+  .playlist-info-track {
+    font-size: 32px !important;
+    line-height: 1.2;
+    width: 70%;
+  }
+
   .playlist-duration {
-    font-size: 41px; /* Increased font size for better readability */
+    font-size: 24px !important;
+    line-height: 1.2;
   }
+
   body {
-    font-size: 42px;
+    font-size: 32px;
   }
+
   .btn-ctn > div {
-    padding: 37px;
+    padding: 25px;
+    margin: 15px;
   }
+
   .fas {
-    font-size: 50px;
+    font-size: 32px;
   }
+
   .playlist-ctn {
-    overflow-y: auto; /* Makes the playlist container scrollable */
-    max-height: calc(
-      100vh - 150px
-    ); /* Adjust the max-height accordingly to your player-ctn's height */
-    padding-top: 1rem; /* Adds some space between the player controls and the playlist */
+    overflow-y: auto;
+    max-height: calc(100vh - 200px);
+    padding-top: 1rem;
   }
+
+  .title {
+    font-size: 28px;
+    margin-left: 20px;
+    width: 55%;
+  }
+
+  .timer, .duration {
+    font-size: 24px;
+  }
+}
+
+/* Additional iOS-specific fixes */
+@supports (-webkit-touch-callout: none) {
+  .playlist-info-track {
+    font-size: 32px !important;
+  }
+  
+  .playlist-track-ctn {
+    min-height: 60px;
+  }
+}
+
+.site-header {
+  background-color: #373737;
+  padding: 8px 0;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 1001;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.site-header h1 {
+  color: #ffc266;
+  font-size: 23px !important;
+  margin: 0;
+  padding: 0;
+  font-weight: normal;
+  line-height: 1;
+  font-family: "Roboto", sans-serif;
+  text-transform: none;
+  letter-spacing: normal;
+  margin-right: 48px;
 }
