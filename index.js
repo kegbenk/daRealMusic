@@ -207,8 +207,10 @@ app.get('/list-music', async (req, res) => {
             .map(item => ({
                 name: item.Key.replace('.mp3', ''),
                 file: item.Key,
-                duration: 'Unknown'  // Will be updated when played
-            }));
+                duration: 'Unknown',  // Will be updated when played
+                lastModified: item.LastModified
+            }))
+            .sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified));
 
         console.log('Returning music files:', musicFiles.length);
         res.json(musicFiles);
