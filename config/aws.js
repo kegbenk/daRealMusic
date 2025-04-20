@@ -17,7 +17,6 @@ console.log('S3 Bucket:', process.env.S3_BUCKET_NAME);
 AWS.config.update(awsConfig);
 
 const s3 = new AWS.S3();
-const cloudfront = new AWS.CloudFront();
 
 async function testS3() {
     try {
@@ -63,12 +62,7 @@ async function testS3() {
     }
 }
 
-// Export the configuration and clients
 module.exports = {
-    awsConfig,
     s3,
-    cloudfront,
-    bucketName: process.env.S3_BUCKET_NAME,
-    cloudfrontDomain: process.env.CLOUDFRONT_DOMAIN,
     testS3
 }; 

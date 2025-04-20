@@ -110,21 +110,6 @@ app.get("/", async (req, res) => {
     res.sendFile(path.join(__dirname, "public", "home.html"));
 });
 
-// API endpoint to get signed URL for a music file
-app.get("/api/music/:filename", async (req, res) => {
-    if (!isProduction) {
-        return res.status(404).json({ error: 'API not available in development mode' });
-    }
-    
-    try {
-        const filename = req.params.filename;
-        const signedUrl = await getSignedUrl(`music/${filename}`);
-        res.json({ url: signedUrl });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to generate signed URL' });
-    }
-});
-
 // Route to get signed URL for a song
 app.get('/get-signed-url', async (req, res) => {
     const key = req.query.key;

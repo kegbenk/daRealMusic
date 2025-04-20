@@ -14,7 +14,7 @@ async function getSignedUrl(songKey) {
         if (isDevelopment) {
             console.log('Development mode: Using local file path');
             // In development, use the local file path
-            return `/music/${songKey}`;
+            return `/${songKey}`;
         } else {
             // In production, get signed URL from the server
             const response = await fetch(`/get-signed-url?key=${encodeURIComponent(songKey)}`);
