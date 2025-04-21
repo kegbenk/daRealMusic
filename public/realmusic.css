@@ -138,7 +138,7 @@ body {
 @media only screen and (max-device-width: 700px) and (orientation: portrait) {
   /* Adjust styles for mobile screens */
   .player-ctn {
-    margin-top: 50px;
+    margin-top: 21px;
     width: 98%;
     position: -webkit-sticky; /* Safari */
     position: sticky;
@@ -210,12 +210,13 @@ body {
 .site-header {
   /* background-color: #373737; */
   padding: 8px 0;
-  text-align: center;
   position: sticky;
   top: 0;
   z-index: 1001;
   width: 100%;
   box-sizing: border-box;
+  margin-left: 15px;
+  padding-top: 14px;
 }
 
 .site-header h1 {
