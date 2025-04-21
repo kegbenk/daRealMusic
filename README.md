@@ -1,96 +1,205 @@
-# Hot 'n Tasty Music Player
+# daRealMusic
 
-A modern, responsive web-based music player with cloud storage integration and mobile-friendly design.
+A modern music player application that allows users to stream music files directly from AWS S3 through CloudFront. The application features a responsive design, dynamic playlist management, and efficient audio streaming.
 
 ## Features
 
-- 🎵 Cloud-based audio streaming from AWS CloudFront
-- 📱 Responsive design optimized for both desktop and mobile devices
-- 🎨 Modern UI with custom controls and progress bar
-- 🔄 Dynamic playlist management
-- ⏯️ Playback controls:
-  - Play/Pause
-  - Next/Previous track
-  - Fast forward/Rewind
-  - Volume control
-- 📊 Real-time progress tracking
-- 🎶 Metadata display (track title, duration)
-- 🔒 Secure signed URLs for audio access
+- Stream music files directly from AWS S3 through CloudFront
+- Dynamic playlist management with automatic metadata updates
+- Responsive design optimized for both desktop and mobile
+- Cross-platform audio playback with iOS compatibility
+- Real-time audio progress tracking
+- Volume control and mute functionality
+- Automatic playlist generation from S3 bucket contents
+- Secure file access through CloudFront distribution
 
 ## Architecture
 
 ```mermaid
 graph TD
-    A[Client Browser] -->|HTTP Request| B[CloudFront CDN]
-    B -->|Signed URL| C[AWS S3 Bucket]
-    A -->|API Calls| D[Backend Server]
-    D -->|Generate Signed URLs| B
-    D -->|Manage Playlist| E[Database]
+    A[Client Browser] -->|HTTP Requests| B[Express Server]
+    B -->|Metadata| C[AWS S3 Bucket]
+    B -->|Audio Files| D[CloudFront Distribution]
+    D -->|Origin| C
+    E[Lambda Function] -->|Update Metadata| C
+    F[S3 Event] -->|Trigger| E
     
-    subgraph Frontend
-        A -->|DOM Events| F[Audio Player]
-        F -->|Audio Context| G[HTML5 Audio Element]
-        F -->|UI Updates| H[CSS Styling]
+    subgraph AWS Cloud
+        C
+        D
+        E
     end
     
-    subgraph Backend
-        D -->|Authentication| I[Auth Service]
-        D -->|File Management| J[Storage Service]
+    subgraph Application
+        B
+        G[Frontend]
+        H[Backend]
+    end
+    
+    subgraph Client
+        A
+        I[Audio Player]
+        J[Playlist UI]
     end
 ```
 
-## Technical Stack
+## Prerequisites
 
-- **Frontend:**
-  - HTML5
-  - CSS3 (with responsive design)
-  - JavaScript (ES6+)
-  - Font Awesome icons
-  - Google Fonts (Roboto)
+- Node.js 18 or higher
+- AWS account with:
+  - S3 access
+  - CloudFront distribution
+  - Lambda function permissions
+- AWS Lightsail instance
+- GitHub repository
 
-- **Backend:**
-  - AWS CloudFront (CDN)
-  - AWS S3 (Storage)
-  - Signed URL authentication
+## Environment Variables
 
-## Setup Instructions
+Create a `.env` file in the root directory with the following variables:
 
-1. Clone the repository
-2. Ensure you have the necessary AWS credentials configured
-3. Update the CloudFront distribution URL in the configuration
-4. Deploy the static files to your web server
+```env
+NODE_ENV=production
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+S3_BUCKET_NAME=your-music-bucket
+CLOUDFRONT_DOMAIN=your-cloudfront-domain.cloudfront.net
+```
 
-## Mobile Optimization
+## Installation
 
-The player is specifically optimized for mobile devices with:
-- Touch-friendly controls
-- Responsive layout
-- iOS-specific fixes
-- Optimized font sizes and spacing
-- Sticky header and player controls
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/daRealMusic.git
+cd daRealMusic
+```
 
-## Browser Support
+2. Install dependencies:
+```bash
+npm install
+```
 
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
-- Mobile Safari (iOS)
-- Chrome for Android
+3. Start the development server:
+```bash
+npm start
+```
 
-## Security Features
+## Deployment
 
-- Signed URL authentication for audio files
-- Secure CloudFront distribution
-- Protected S3 bucket access
+The application is deployed to AWS Lightsail using GitHub Actions. The deployment process is automated and triggered on every push to the main branch.
+
+### Deployment Process
+
+1. GitHub Actions workflow is triggered on push to main branch
+2. Code is copied to the Lightsail instance
+3. Systemd service is created and configured
+4. Dependencies are installed
+5. Application is started/restarted
+
+### Required GitHub Secrets
+
+Add these secrets to your GitHub repository:
+- `LIGHTSAIL_HOST`: Your Lightsail instance's public IP
+- `LIGHTSAIL_SSH_KEY`: Your Lightsail SSH private key
+- `AWS_ACCESS_KEY_ID`: Your AWS access key
+- `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
+
+### Deployment Directory Structure
+
+The application is deployed to:
+```
+/opt/bitnami/apps/music-player/
+```
+
+### Systemd Service
+
+The application runs as a systemd service with the following configuration:
+- Service name: `music-player`
+- User: `bitnami`
+- Working directory: `/opt/bitnami/apps/music-player`
+- Restart policy: `on-failure`
+
+## Development
+
+### Project Structure
+
+```
+daRealMusic/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml          # GitHub Actions deployment workflow
+├── config/
+│   └── aws.js                 # AWS configuration
+├── public/
+│   ├── css/
+│   │   └── styles.css         # Stylesheet
+│   ├── js/
+│   │   └── realMusic.js       # Frontend JavaScript
+│   └── index.html             # Main HTML file
+├── .env                       # Environment variables
+├── .gitignore                 # Git ignore file
+├── index.js                   # Main server file
+├── package.json               # Project dependencies
+└── README.md                  # This file
+```
+
+## AWS Infrastructure
+
+### S3 Bucket Configuration
+- Public access blocked
+- CORS enabled for CloudFront access
+- Lifecycle rules for cost optimization
+
+### CloudFront Distribution
+- Origin pointing to S3 bucket
+- CORS headers enabled
+- Cache behavior optimized for audio streaming
+- SSL/TLS encryption
+
+### Lambda Function
+- Triggered by S3 upload events
+- Updates metadata file automatically
+- Maintains playlist information
+
+## Security Considerations
+
+- AWS credentials are stored as GitHub secrets
+- Environment variables are not committed to the repository
+- CloudFront distribution provides secure access to S3 content
+- CORS policies are properly configured
+- S3 bucket permissions are properly configured
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Audio Playback Issues**
+   - Check CloudFront distribution configuration
+   - Verify CORS settings
+   - Ensure proper audio format support
+
+2. **Deployment Permission Errors**
+   - Ensure the `bitnami` user has proper permissions
+   - Check systemd service configuration
+
+3. **AWS Connection Issues**
+   - Verify AWS credentials
+   - Check S3 bucket permissions
+   - Confirm region settings
+   - Validate CloudFront distribution
+
+4. **Service Not Starting**
+   - Check systemd logs: `sudo journalctl -u music-player`
+   - Verify file permissions
+   - Check application logs
 
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch
+2. Create a feature branch
 3. Commit your changes
 4. Push to the branch
-5. Create a new Pull Request
+5. Create a Pull Request
 
 ## License
 
