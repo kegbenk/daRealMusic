@@ -163,6 +163,7 @@ body {
   .playlist-duration {
     font-size: 24px !important;
     line-height: 1.2;
+    padding-top: 35px;
   }
 
   body {

@@ -88,7 +88,13 @@ async function loadMusicList() {
         
         // Create track items for each song
         listAudio.forEach((track, index) => {
-            createTrackItem(index, track.name, "00:00");
+            // Calculate initial duration estimate based on file size
+            // Using a more accurate average bitrate of 192kbps for MP3 files
+            const bitrate = 192000; // 192kbps in bits per second
+            const durationInSeconds = Math.floor((track.size * 8) / bitrate);
+            const formattedDuration = formatTime(durationInSeconds);
+            
+            createTrackItem(index, track.name, formattedDuration);
         });
         
         // Set up event listeners for playlist items
@@ -106,6 +112,14 @@ async function loadMusicList() {
         
     } catch (error) {
         console.error('Error loading music list:', error);
+    }
+}
+
+// Function to update playlist duration when audio metadata is loaded
+function updatePlaylistDuration(index, duration) {
+    const trackItem = document.querySelector(`#ptc-${index} .playlist-duration`);
+    if (trackItem) {
+        trackItem.innerHTML = formatTime(duration);
     }
 }
 
@@ -209,6 +223,14 @@ async function loadNewTrack(index) {
         
         player.src = audioUrl;
         titleElement.innerHTML = listAudio[index].name;
+        
+        // Add loadedmetadata event listener to update duration
+        currentAudio.addEventListener('loadedmetadata', function() {
+            if (!isNaN(currentAudio.duration)) {
+                updatePlaylistDuration(index, currentAudio.duration);
+            }
+        }, { once: true });
+        
         currentAudio.load();
         
         // Update UI
@@ -285,13 +307,23 @@ function onTimeUpdate() {
     if (!currentAudio) return;
     
     const t = currentAudio.currentTime;
-    timer.innerHTML = formatTime(t);
+    const d = currentAudio.duration;
+    
+    // Update timer display
+    document.querySelector(".timer").innerHTML = formatTime(t);
+    
+    // Update duration display
+    if (!isNaN(d)) {
+        document.querySelector(".duration").innerHTML = formatTime(d);
+    }
+    
     setBarProgress();
     
     if (currentAudio.ended) {
         document.querySelector("#icon-play").style.display = "block";
         document.querySelector("#icon-pause").style.display = "none";
         pauseToPlay(indexAudio);
+        
         if (indexAudio < listAudio.length - 1) {
             const nextIndex = indexAudio + 1;
             loadNewTrack(nextIndex);
