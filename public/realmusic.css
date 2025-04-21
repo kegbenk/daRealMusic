@@ -156,6 +156,8 @@ body {
     font-size: 32px !important;
     line-height: 1.2;
     width: 70%;
+    padding-top: 29px;
+    padding-left: 28px;
   }
 
   .playlist-duration {
@@ -164,12 +166,12 @@ body {
   }
 
   body {
-    font-size: 32px;
+    font-size: 61px;
   }
 
   .btn-ctn > div {
     padding: 25px;
-    margin: 15px;
+    margin: 23px;
   }
 
   .fas {
@@ -179,11 +181,11 @@ body {
   .playlist-ctn {
     overflow-y: auto;
     max-height: calc(100vh - 200px);
-    padding-top: 1rem;
+    padding-top: 2rem;
   }
 
   .title {
-    font-size: 28px;
+    font-size: 33px;
     margin-left: 20px;
     width: 55%;
   }
@@ -205,7 +207,7 @@ body {
 }
 
 .site-header {
-  background-color: #373737;
+  /* background-color: #373737; */
   padding: 8px 0;
   text-align: center;
   position: sticky;
