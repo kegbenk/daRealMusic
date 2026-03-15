@@ -3,21 +3,22 @@ name: Deploy to Lightsail
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          
+
       - name: Install dependencies
         run: npm install
-        
+
       - name: Deploy to Lightsail
         uses: appleboy/scp-action@master
         with:
@@ -27,7 +28,7 @@ jobs:
           source: "."
           target: "/tmp/music-player"
           strip_components: 0
-          
+
       - name: Setup and restart service
         uses: appleboy/ssh-action@master
         with:
@@ -38,11 +39,11 @@ jobs:
             # Create directory with proper permissions
             sudo mkdir -p /opt/bitnami/apps/music-player
             sudo chown -R bitnami:bitnami /opt/bitnami/apps/music-player
-            
+
             # Copy files from temp directory
             sudo cp -r /tmp/music-player/* /opt/bitnami/apps/music-player/
             sudo chown -R bitnami:bitnami /opt/bitnami/apps/music-player/*
-            
+
             # Create service file
             sudo tee /etc/systemd/system/music-player.service << EOF
             [Unit]
@@ -68,11 +69,11 @@ jobs:
             [Install]
             WantedBy=multi-user.target
             EOF
-            
+
             # Reload systemd and enable service
             sudo systemctl daemon-reload
             sudo systemctl enable music-player
-            
+
             # Create .env file
             CLOUDFRONT_DOMAIN=$(echo "${{ secrets.CLOUDFRONT_DOMAIN }}" | sed 's|^https://||')
             cat > /opt/bitnami/apps/music-player/.env << 'EOL'
@@ -87,8 +88,70 @@ jobs:
             STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY }}
             EOL
             chmod 600 /opt/bitnami/apps/music-player/.env
-            
+
             # Install dependencies and restart service
             cd /opt/bitnami/apps/music-player
             npm install
-            sudo systemctl restart music-player 
+            sudo systemctl restart music-player
+
+      - name: Setup SSL
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: bitnami
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          script: |
+            # Skip if SSL cert already exists
+            if [ -f /etc/letsencrypt/live/hotntasty.info/fullchain.pem ]; then
+              echo "SSL certificate already exists, skipping setup"
+              # Just make sure nginx is reloaded with latest config
+              sudo nginx -t && sudo systemctl reload nginx
+              exit 0
+            fi
+
+            echo "=== Setting up SSL ==="
+
+            # Install certbot
+            sudo apt-get update -qq
+            sudo apt-get install -y certbot python3-certbot-nginx
+
+            # Write nginx config for the site
+            sudo tee /etc/nginx/sites-available/hotntasty.info > /dev/null << 'NGINX'
+            server {
+                listen 80;
+                server_name hotntasty.info www.hotntasty.info;
+
+                location / {
+                    proxy_pass http://127.0.0.1:3000;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                    proxy_cache_bypass $http_upgrade;
+                    client_max_body_size 50M;
+                }
+            }
+            NGINX
+
+            # Enable site, remove default if it exists
+            sudo ln -sf /etc/nginx/sites-available/hotntasty.info /etc/nginx/sites-enabled/
+            sudo rm -f /etc/nginx/sites-enabled/default
+
+            # Test and reload nginx
+            sudo nginx -t && sudo systemctl reload nginx
+
+            # Get SSL certificate from Let's Encrypt
+            sudo certbot --nginx \
+              -d hotntasty.info \
+              --non-interactive \
+              --agree-tos \
+              --email contact@pleromallc.com \
+              --redirect
+
+            # Verify auto-renewal is working
+            sudo certbot renew --dry-run
+
+            echo "=== SSL setup complete ==="
