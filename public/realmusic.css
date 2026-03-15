@@ -94,24 +94,27 @@ body {
 .logo-mark {
   display: flex;
   align-items: flex-end;
-  gap: 4px;
-  height: 28px;
+  gap: 7px;
+  height: 34px;
+  padding-right: 2px;
 }
 
 .logo-bar {
   display: block;
-  width: 4px;
-  border-radius: 2px;
+  width: 5px;
+  border-radius: 3px;
 }
 
 .logo-bar-red {
-  height: 24px;
+  height: 30px;
   background-color: #e84a27;
+  align-self: flex-start;
 }
 
 .logo-bar-cyan {
-  height: 16px;
+  height: 20px;
   background-color: #00d4ff;
+  align-self: flex-end;
 }
 
 .logo-text {
