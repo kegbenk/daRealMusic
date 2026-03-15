@@ -303,34 +303,92 @@ app.get('/api/download', async (req, res) => {
             return res.status(402).json({ error: 'Payment not completed' });
         }
 
-        // Get the track list for download links
         const type = session.metadata.type;
-        const cloudfrontDomain = process.env.CLOUDFRONT_DOMAIN;
+        const downloads = await getDownloadLinks(type, session.metadata.trackName);
 
-        if (type === 'album' || type === 'custom') {
-            // Return all tracks
-            const params = {
-                Bucket: process.env.S3_BUCKET_NAME,
-                Key: 'music_metadata.json'
-            };
-            const data = await s3.getObject(params).promise();
-            const tracks = JSON.parse(data.Body.toString());
+        // Save purchase record so customer can re-download later
+        savePurchase(session.customer_details?.email, type, session.metadata.trackName, session.id);
 
-            const downloads = tracks.map(track => ({
-                name: track.name,
-                url: `https://${cloudfrontDomain}/${track.file}`
-            }));
-            res.json({ downloads, type: 'album' });
-        } else if (type === 'single') {
-            const trackName = session.metadata.trackName;
-            res.json({
-                downloads: [{ name: trackName, url: `https://${cloudfrontDomain}/${trackName}.mp3` }],
-                type: 'single'
-            });
-        }
+        res.json({ downloads, type: type === 'single' ? 'single' : 'album' });
     } catch (error) {
         console.error('Download verification error:', error.message);
         res.status(500).json({ error: 'Failed to verify purchase' });
+    }
+});
+
+// Build download links for a purchase type
+async function getDownloadLinks(type, trackName) {
+    const cloudfrontDomain = process.env.CLOUDFRONT_DOMAIN;
+
+    if (type === 'album' || type === 'custom') {
+        const params = { Bucket: process.env.S3_BUCKET_NAME, Key: 'music_metadata.json' };
+        const data = await s3.getObject(params).promise();
+        const tracks = JSON.parse(data.Body.toString());
+        return tracks.map(track => ({
+            name: track.name,
+            url: `https://${cloudfrontDomain}/${track.file}`
+        }));
+    } else if (type === 'single') {
+        return [{ name: trackName, url: `https://${cloudfrontDomain}/${trackName}.mp3` }];
+    }
+    return [];
+}
+
+// Save a purchase record
+function savePurchase(email, type, trackName, sessionId) {
+    if (!email) return;
+    const file = path.join(DATA_DIR, 'purchases.json');
+    let purchases = [];
+    try { purchases = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
+
+    // Don't duplicate the same session
+    if (purchases.some(p => p.sessionId === sessionId)) return;
+
+    purchases.push({
+        email: email.toLowerCase(),
+        type,
+        trackName: trackName || '',
+        sessionId,
+        date: new Date().toISOString()
+    });
+    fs.writeFileSync(file, JSON.stringify(purchases, null, 2));
+}
+
+// Re-download: look up purchases by email
+app.post('/api/redownload', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ error: 'Email required' });
+        }
+
+        const file = path.join(DATA_DIR, 'purchases.json');
+        let purchases = [];
+        try { purchases = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
+
+        const userPurchases = purchases.filter(p => p.email === email.toLowerCase());
+        if (userPurchases.length === 0) {
+            return res.status(404).json({ error: 'No purchases found for this email' });
+        }
+
+        // Collect all unique downloads across all purchases
+        const allDownloads = [];
+        const seen = new Set();
+
+        for (const purchase of userPurchases) {
+            const links = await getDownloadLinks(purchase.type, purchase.trackName);
+            for (const link of links) {
+                if (!seen.has(link.name)) {
+                    seen.add(link.name);
+                    allDownloads.push(link);
+                }
+            }
+        }
+
+        res.json({ downloads: allDownloads });
+    } catch (error) {
+        console.error('Redownload error:', error.message);
+        res.status(500).json({ error: 'Failed to look up purchases' });
     }
 });
 
