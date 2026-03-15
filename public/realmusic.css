@@ -489,10 +489,15 @@ body {
   transition: background-color var(--transition-speed) ease, transform var(--transition-speed) ease;
 }
 
-.buy-btn:hover,
-.buy-btn:focus {
+.buy-btn:hover:not(:disabled),
+.buy-btn:focus:not(:disabled) {
   background-color: #ffce80;
   transform: translateY(-1px);
+}
+
+.buy-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .redownload-note {

@@ -70,15 +70,7 @@ async function loadMusicList() {
         });
 
         // Populate the track picker dropdown
-        const picker = document.getElementById('track-picker');
-        if (picker) {
-            listAudio.forEach((track) => {
-                const opt = document.createElement('option');
-                opt.value = track.name;
-                opt.textContent = track.name;
-                picker.appendChild(opt);
-            });
-        }
+        populateTrackPicker();
 
         // Click and keyboard listeners for playlist items
         const playListItems = document.querySelectorAll(".playlist-track-ctn");
@@ -476,6 +468,28 @@ function setupLicensingForm() {
         } catch {
             status.textContent = 'Something went wrong. Try again.';
         }
+    });
+}
+
+// Populate track picker and wire up enable/disable on buy button
+function populateTrackPicker() {
+    const picker = document.getElementById('track-picker');
+    const buyBtn = document.getElementById('buy-single-btn');
+    if (!picker || !listAudio.length) return;
+
+    // Clear existing options except the placeholder
+    picker.innerHTML = '<option value="">Choose a track</option>';
+
+    listAudio.forEach((track) => {
+        const opt = document.createElement('option');
+        opt.value = track.name;
+        opt.textContent = track.name;
+        picker.appendChild(opt);
+    });
+
+    // Enable/disable buy button based on selection
+    picker.addEventListener('change', () => {
+        if (buyBtn) buyBtn.disabled = !picker.value;
     });
 }
 
