@@ -69,6 +69,17 @@ async function loadMusicList() {
             createTrackItem(index, track.name, formatTime(durationInSeconds));
         });
 
+        // Populate the track picker dropdown
+        const picker = document.getElementById('track-picker');
+        if (picker) {
+            listAudio.forEach((track) => {
+                const opt = document.createElement('option');
+                opt.value = track.name;
+                opt.textContent = track.name;
+                picker.appendChild(opt);
+            });
+        }
+
         // Click and keyboard listeners for playlist items
         const playListItems = document.querySelectorAll(".playlist-track-ctn");
         playListItems.forEach(item => {
@@ -476,10 +487,17 @@ async function handlePurchase(type) {
     btn.innerHTML = 'Loading...';
 
     try {
-        // For single track, use the currently selected track name
-        const trackName = (type === 'single' && listAudio[indexAudio])
-            ? listAudio[indexAudio].name
-            : undefined;
+        let trackName;
+        if (type === 'single') {
+            const picker = document.getElementById('track-picker');
+            trackName = picker ? picker.value : '';
+            if (!trackName) {
+                alert('Please choose a track first.');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                return;
+            }
+        }
 
         const res = await fetch('/api/checkout', {
             method: 'POST',

@@ -148,7 +148,9 @@
           </div>
           <div class="buy-card">
             <h3>Single Track</h3>
-            <p class="buy-album-title">Pick any track</p>
+            <select id="track-picker" class="track-picker" aria-label="Choose a track">
+              <option value="">Choose a track</option>
+            </select>
             <p class="buy-price">$1</p>
             <p class="buy-format">High-quality MP3 (320kbps)</p>
             <button class="buy-btn" onclick="handlePurchase('single')">
