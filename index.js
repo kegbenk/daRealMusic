@@ -289,19 +289,26 @@ app.post('/api/checkout', async (req, res) => {
 });
 
 // Build download links for a purchase type
-async function getDownloadLinks(type, trackName) {
-    const cloudfrontDomain = process.env.CLOUDFRONT_DOMAIN;
-
+// token is optional — if provided, links go through the download proxy
+async function getDownloadLinks(type, trackName, token) {
     if (type === 'album' || type === 'custom') {
         const params = { Bucket: process.env.S3_BUCKET_NAME, Key: 'music_metadata.json' };
         const data = await s3.getObject(params).promise();
         const tracks = JSON.parse(data.Body.toString());
         return tracks.map(track => ({
             name: track.name,
-            url: `https://${cloudfrontDomain}/${track.file}`
+            url: token
+                ? `/api/download-file?token=${token}&file=${encodeURIComponent(track.file)}`
+                : `https://${process.env.CLOUDFRONT_DOMAIN}/${track.file}`
         }));
     } else if (type === 'single') {
-        return [{ name: trackName, url: `https://${cloudfrontDomain}/${trackName}.mp3` }];
+        const file = `${trackName}.mp3`;
+        return [{
+            name: trackName,
+            url: token
+                ? `/api/download-file?token=${token}&file=${encodeURIComponent(file)}`
+                : `https://${process.env.CLOUDFRONT_DOMAIN}/${file}`
+        }];
     }
     return [];
 }
@@ -346,10 +353,10 @@ app.get('/api/download', async (req, res) => {
         }
 
         const type = session.metadata.type;
-        const downloads = await getDownloadLinks(type, session.metadata.trackName);
         const token = createPurchaseToken(
             session.customer_details?.email, type, session.metadata.trackName, session.id
         );
+        const downloads = await getDownloadLinks(type, session.metadata.trackName, token);
 
         res.json({ downloads, token, type: type === 'single' ? 'single' : 'album' });
     } catch (error) {
@@ -375,11 +382,51 @@ app.get('/api/redownload', async (req, res) => {
             return res.status(404).json({ error: 'Invalid download link' });
         }
 
-        const downloads = await getDownloadLinks(purchase.type, purchase.trackName);
+        const downloads = await getDownloadLinks(purchase.type, purchase.trackName, token);
         res.json({ downloads });
     } catch (error) {
         console.error('Redownload error:', error.message);
         res.status(500).json({ error: 'Failed to look up purchase' });
+    }
+});
+
+// Proxy file download with Content-Disposition: attachment
+// Requires a valid purchase token so only buyers can download
+app.get('/api/download-file', async (req, res) => {
+    try {
+        const { token, file: fileKey } = req.query;
+        if (!token || !fileKey) {
+            return res.status(400).json({ error: 'Missing token or file' });
+        }
+
+        // Verify the token is valid
+        const purchasesFile = path.join(DATA_DIR, 'purchases.json');
+        let purchases = [];
+        try { purchases = JSON.parse(fs.readFileSync(purchasesFile, 'utf8')); } catch {}
+
+        const purchase = purchases.find(p => p.token === token);
+        if (!purchase) {
+            return res.status(403).json({ error: 'Invalid download token' });
+        }
+
+        // Stream the file from S3 with attachment headers
+        const params = { Bucket: process.env.S3_BUCKET_NAME, Key: fileKey };
+        const filename = fileKey.split('/').pop();
+
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Type', 'audio/mpeg');
+
+        const stream = s3.getObject(params).createReadStream();
+        stream.on('error', (err) => {
+            console.error('Download stream error:', err.message);
+            if (!res.headersSent) {
+                res.status(404).json({ error: 'File not found' });
+            }
+        });
+        stream.pipe(res);
+    } catch (error) {
+        console.error('File download error:', error.message);
+        res.status(500).json({ error: 'Download failed' });
     }
 });
 
