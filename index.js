@@ -3,7 +3,9 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const { s3, testS3 } = require('./config/aws');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const stripe = process.env.STRIPE_SECRET_KEY
+    ? require('stripe')(process.env.STRIPE_SECRET_KEY)
+    : null;
 
 const DATA_DIR = path.join(__dirname, 'data');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
@@ -209,6 +211,9 @@ app.post('/api/licensing', (req, res) => {
 
 // Stripe checkout
 app.post('/api/checkout', async (req, res) => {
+    if (!stripe) {
+        return res.status(503).json({ error: 'Payments not configured yet' });
+    }
     try {
         const { type, trackName } = req.body;
         const baseUrl = `${req.protocol}://${req.get('host')}`;
@@ -284,6 +289,9 @@ app.post('/api/checkout', async (req, res) => {
 
 // Verify purchase and provide download links
 app.get('/api/download', async (req, res) => {
+    if (!stripe) {
+        return res.status(503).json({ error: 'Payments not configured yet' });
+    }
     try {
         const { session_id } = req.query;
         if (!session_id) {
