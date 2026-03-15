@@ -3,6 +3,7 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const { s3, testS3 } = require('./config/aws');
+const crypto = require('crypto');
 const stripe = process.env.STRIPE_SECRET_KEY
     ? require('stripe')(process.env.STRIPE_SECRET_KEY)
     : null;
@@ -287,35 +288,6 @@ app.post('/api/checkout', async (req, res) => {
     }
 });
 
-// Verify purchase and provide download links
-app.get('/api/download', async (req, res) => {
-    if (!stripe) {
-        return res.status(503).json({ error: 'Payments not configured yet' });
-    }
-    try {
-        const { session_id } = req.query;
-        if (!session_id) {
-            return res.status(400).json({ error: 'Missing session ID' });
-        }
-
-        const session = await stripe.checkout.sessions.retrieve(session_id);
-        if (session.payment_status !== 'paid') {
-            return res.status(402).json({ error: 'Payment not completed' });
-        }
-
-        const type = session.metadata.type;
-        const downloads = await getDownloadLinks(type, session.metadata.trackName);
-
-        // Save purchase record so customer can re-download later
-        savePurchase(session.customer_details?.email, type, session.metadata.trackName, session.id);
-
-        res.json({ downloads, type: type === 'single' ? 'single' : 'album' });
-    } catch (error) {
-        console.error('Download verification error:', error.message);
-        res.status(500).json({ error: 'Failed to verify purchase' });
-    }
-});
-
 // Build download links for a purchase type
 async function getDownloadLinks(type, trackName) {
     const cloudfrontDomain = process.env.CLOUDFRONT_DOMAIN;
@@ -334,61 +306,80 @@ async function getDownloadLinks(type, trackName) {
     return [];
 }
 
-// Save a purchase record
-function savePurchase(email, type, trackName, sessionId) {
-    if (!email) return;
+// Generate a unique download token and save the purchase
+function createPurchaseToken(email, type, trackName, sessionId) {
+    const token = crypto.randomBytes(32).toString('hex');
     const file = path.join(DATA_DIR, 'purchases.json');
     let purchases = [];
     try { purchases = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
 
-    // Don't duplicate the same session
-    if (purchases.some(p => p.sessionId === sessionId)) return;
+    // If this session already has a token, return it
+    const existing = purchases.find(p => p.sessionId === sessionId);
+    if (existing) return existing.token;
 
     purchases.push({
-        email: email.toLowerCase(),
+        token,
+        email: (email || '').toLowerCase(),
         type,
         trackName: trackName || '',
         sessionId,
         date: new Date().toISOString()
     });
     fs.writeFileSync(file, JSON.stringify(purchases, null, 2));
+    return token;
 }
 
-// Re-download: look up purchases by email
-app.post('/api/redownload', async (req, res) => {
+// Verify purchase via Stripe and issue a download token
+app.get('/api/download', async (req, res) => {
+    if (!stripe) {
+        return res.status(503).json({ error: 'Payments not configured yet' });
+    }
     try {
-        const { email } = req.body;
-        if (!email) {
-            return res.status(400).json({ error: 'Email required' });
+        const { session_id } = req.query;
+        if (!session_id) {
+            return res.status(400).json({ error: 'Missing session ID' });
+        }
+
+        const session = await stripe.checkout.sessions.retrieve(session_id);
+        if (session.payment_status !== 'paid') {
+            return res.status(402).json({ error: 'Payment not completed' });
+        }
+
+        const type = session.metadata.type;
+        const downloads = await getDownloadLinks(type, session.metadata.trackName);
+        const token = createPurchaseToken(
+            session.customer_details?.email, type, session.metadata.trackName, session.id
+        );
+
+        res.json({ downloads, token, type: type === 'single' ? 'single' : 'album' });
+    } catch (error) {
+        console.error('Download verification error:', error.message);
+        res.status(500).json({ error: 'Failed to verify purchase' });
+    }
+});
+
+// Re-download using a unique token
+app.get('/api/redownload', async (req, res) => {
+    try {
+        const { token } = req.query;
+        if (!token) {
+            return res.status(400).json({ error: 'Missing download token' });
         }
 
         const file = path.join(DATA_DIR, 'purchases.json');
         let purchases = [];
         try { purchases = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
 
-        const userPurchases = purchases.filter(p => p.email === email.toLowerCase());
-        if (userPurchases.length === 0) {
-            return res.status(404).json({ error: 'No purchases found for this email' });
+        const purchase = purchases.find(p => p.token === token);
+        if (!purchase) {
+            return res.status(404).json({ error: 'Invalid download link' });
         }
 
-        // Collect all unique downloads across all purchases
-        const allDownloads = [];
-        const seen = new Set();
-
-        for (const purchase of userPurchases) {
-            const links = await getDownloadLinks(purchase.type, purchase.trackName);
-            for (const link of links) {
-                if (!seen.has(link.name)) {
-                    seen.add(link.name);
-                    allDownloads.push(link);
-                }
-            }
-        }
-
-        res.json({ downloads: allDownloads });
+        const downloads = await getDownloadLinks(purchase.type, purchase.trackName);
+        res.json({ downloads });
     } catch (error) {
         console.error('Redownload error:', error.message);
-        res.status(500).json({ error: 'Failed to look up purchases' });
+        res.status(500).json({ error: 'Failed to look up purchase' });
     }
 });
 

@@ -163,7 +163,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         setupSmoothScroll();
         setupEmailForm();
         setupLicensingForm();
-        setupRedownloadForm();
     } catch (error) {
         console.error('Error initializing player:', error);
     }
@@ -463,52 +462,6 @@ function setupLicensingForm() {
             const data = await res.json();
             status.textContent = data.message || 'Inquiry sent!';
             if (res.ok) form.reset();
-        } catch {
-            status.textContent = 'Something went wrong. Try again.';
-        }
-    });
-}
-
-// Toggle re-download form visibility
-function toggleRedownload() {
-    const form = document.getElementById('redownload-form');
-    if (form) form.style.display = form.style.display === 'none' ? 'flex' : 'none';
-}
-
-// Re-download form
-function setupRedownloadForm() {
-    const form = document.getElementById('redownload-form');
-    if (!form) return;
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const status = document.getElementById('redownload-status');
-        const list = document.getElementById('redownload-list');
-        const email = document.getElementById('redownload-email').value;
-
-        status.textContent = 'Looking up...';
-        list.innerHTML = '';
-
-        try {
-            const res = await fetch('/api/redownload', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
-            });
-            const data = await res.json();
-
-            if (!res.ok) {
-                status.textContent = data.error || 'No purchases found.';
-                return;
-            }
-
-            status.textContent = '';
-            data.downloads.forEach(track => {
-                const li = document.createElement('li');
-                li.className = 'redownload-item';
-                li.innerHTML = `<span>${track.name}</span><a href="${track.url}" download>Download</a>`;
-                list.appendChild(li);
-            });
         } catch {
             status.textContent = 'Something went wrong. Try again.';
         }
