@@ -365,6 +365,209 @@ body {
   font-weight: bold;
 }
 
+/* === Buy Section === */
+.buy-section {
+  padding: 80px 24px;
+  background-color: var(--bg-primary);
+}
+
+.buy-subtitle,
+.licensing-subtitle,
+.signup-subtitle {
+  text-align: center;
+  color: var(--text-gold-muted);
+  font-size: 16px;
+  margin-top: -24px;
+  margin-bottom: 40px;
+}
+
+.buy-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.buy-card {
+  background-color: var(--bg-secondary);
+  padding: 32px;
+  border-radius: 12px;
+  border: 1px solid var(--bg-tertiary);
+  text-align: center;
+  transition: border-color var(--transition-speed) ease;
+}
+
+.buy-card:hover {
+  border-color: var(--accent-gold);
+}
+
+.buy-card h3 {
+  font-size: 18px;
+  color: var(--accent-gold);
+  margin-bottom: 8px;
+}
+
+.buy-album-title {
+  font-size: 14px;
+  color: var(--text-gold-muted);
+  margin-bottom: 16px;
+}
+
+.buy-price {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--accent-gold);
+  margin-bottom: 8px;
+}
+
+.buy-format {
+  font-size: 13px;
+  color: var(--text-gold-muted);
+  margin-bottom: 24px;
+}
+
+.buy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--accent-gold);
+  color: var(--bg-primary);
+  border: none;
+  padding: 12px 28px;
+  border-radius: 50px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-family);
+  transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+}
+
+.buy-btn:hover,
+.buy-btn:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 194, 102, 0.3);
+}
+
+/* === Licensing Section === */
+.licensing-section {
+  padding: 80px 24px;
+  background-color: var(--bg-secondary);
+}
+
+.licensing-form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  color: var(--accent-gold);
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 12px 16px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--bg-active);
+  border-radius: 8px;
+  color: var(--white);
+  font-size: 15px;
+  font-family: var(--font-family);
+  transition: border-color var(--transition-speed) ease;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #888;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: var(--accent-gold);
+  outline: none;
+}
+
+.form-group textarea {
+  resize: vertical;
+}
+
+.form-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--accent-gold);
+  color: var(--bg-primary);
+  border: none;
+  padding: 12px 28px;
+  border-radius: 50px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-family);
+  transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+}
+
+.form-submit-btn:hover,
+.form-submit-btn:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 194, 102, 0.3);
+}
+
+.form-status {
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--accent-gold);
+  min-height: 20px;
+}
+
+/* === Email Signup Section === */
+.signup-section {
+  padding: 60px 24px;
+  background-color: var(--bg-primary);
+  text-align: center;
+}
+
+.email-form {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.email-form input[type="email"] {
+  flex: 1;
+  padding: 12px 16px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--bg-active);
+  border-radius: 50px;
+  color: var(--white);
+  font-size: 15px;
+  font-family: var(--font-family);
+  transition: border-color var(--transition-speed) ease;
+}
+
+.email-form input[type="email"]::placeholder {
+  color: #888;
+}
+
+.email-form input[type="email"]:focus {
+  border-color: var(--accent-gold);
+  outline: none;
+}
+
 /* === About Section === */
 .about-section {
   padding: 80px 24px;
@@ -538,6 +741,18 @@ body {
 
   .about-grid {
     grid-template-columns: 1fr;
+  }
+
+  .buy-options {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .email-form {
+    flex-direction: column;
   }
 
   /* Mobile nav */

@@ -1,7 +1,11 @@
 require('dotenv').config();
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
 const { s3, testS3 } = require('./config/aws');
+
+const DATA_DIR = path.join(__dirname, 'data');
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
 
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
@@ -165,6 +169,42 @@ async function fetchMusicMetadata(req, res) {
 
 app.get('/get-music-metadata', fetchMusicMetadata);
 app.get('/list-music', fetchMusicMetadata);
+
+// Email signup
+app.post('/api/subscribe', (req, res) => {
+    const { email } = req.body;
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ error: 'Valid email required' });
+    }
+
+    const file = path.join(DATA_DIR, 'subscribers.json');
+    let subscribers = [];
+    try { subscribers = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
+
+    if (subscribers.some(s => s.email === email)) {
+        return res.json({ message: 'Already subscribed' });
+    }
+
+    subscribers.push({ email, date: new Date().toISOString() });
+    fs.writeFileSync(file, JSON.stringify(subscribers, null, 2));
+    res.json({ message: 'Subscribed' });
+});
+
+// Licensing inquiry
+app.post('/api/licensing', (req, res) => {
+    const { name, email, project, message } = req.body;
+    if (!email || !message) {
+        return res.status(400).json({ error: 'Email and message required' });
+    }
+
+    const file = path.join(DATA_DIR, 'licensing-inquiries.json');
+    let inquiries = [];
+    try { inquiries = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
+
+    inquiries.push({ name, email, project, message, date: new Date().toISOString() });
+    fs.writeFileSync(file, JSON.stringify(inquiries, null, 2));
+    res.json({ message: 'Inquiry received' });
+});
 
 // Start the server
 app.listen(port, '0.0.0.0', () => {

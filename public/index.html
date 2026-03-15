@@ -64,8 +64,9 @@
       <ul class="nav-links">
         <li><a href="#hero">Home</a></li>
         <li><a href="#player">Player</a></li>
+        <li><a href="#buy">Buy</a></li>
+        <li><a href="#licensing">Licensing</a></li>
         <li><a href="#about">About</a></li>
-        <li><a href="#listen">Listen</a></li>
         <li><a href="#contact">Contact</a></li>
       </ul>
     </nav>
@@ -130,6 +131,75 @@
       </div>
     </section>
 
+    <!-- Buy / Download Section -->
+    <section id="buy" class="buy-section">
+      <div class="section-inner">
+        <h2 class="section-title">Buy the Music</h2>
+        <p class="buy-subtitle">Support the artist directly. No middleman, no fraction-of-a-penny streams.</p>
+        <div class="buy-options">
+          <div class="buy-card">
+            <h3>Full Album Download</h3>
+            <p class="buy-album-title">Life Under Bittherium</p>
+            <p class="buy-price">$10</p>
+            <p class="buy-format">High-quality MP3 (320kbps)</p>
+            <button class="buy-btn" onclick="handlePurchase('album')">
+              <i class="fas fa-download" aria-hidden="true"></i> Buy Album
+            </button>
+          </div>
+          <div class="buy-card">
+            <h3>Single Track</h3>
+            <p class="buy-album-title">Pick any track</p>
+            <p class="buy-price">$1</p>
+            <p class="buy-format">High-quality MP3 (320kbps)</p>
+            <button class="buy-btn" onclick="handlePurchase('single')">
+              <i class="fas fa-download" aria-hidden="true"></i> Buy Track
+            </button>
+          </div>
+          <div class="buy-card">
+            <h3>Name Your Price</h3>
+            <p class="buy-album-title">Full album + extras</p>
+            <p class="buy-price">$???</p>
+            <p class="buy-format">Pay what you think it's worth</p>
+            <button class="buy-btn" onclick="handlePurchase('custom')">
+              <i class="fas fa-heart" aria-hidden="true"></i> Support
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Licensing Section -->
+    <section id="licensing" class="licensing-section">
+      <div class="section-inner">
+        <h2 class="section-title">Licensing &amp; Sync</h2>
+        <p class="licensing-subtitle">Use this music in your project. Film, TV, games, ads, podcasts &mdash; get in touch for rates.</p>
+        <form id="licensing-form" class="licensing-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="lic-name">Name</label>
+              <input type="text" id="lic-name" name="name" placeholder="Your name" />
+            </div>
+            <div class="form-group">
+              <label for="lic-email">Email *</label>
+              <input type="email" id="lic-email" name="email" placeholder="you@company.com" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="lic-project">Project type</label>
+            <input type="text" id="lic-project" name="project" placeholder="Film, podcast, game, ad, etc." />
+          </div>
+          <div class="form-group">
+            <label for="lic-message">Message *</label>
+            <textarea id="lic-message" name="message" rows="4" placeholder="Tell us about your project and which tracks you're interested in." required></textarea>
+          </div>
+          <button type="submit" class="form-submit-btn">
+            <i class="fas fa-paper-plane" aria-hidden="true"></i> Send Inquiry
+          </button>
+          <p class="form-status" id="licensing-status"></p>
+        </form>
+      </div>
+    </section>
+
     <!-- About Section -->
     <section id="about" class="about-section">
       <div class="section-inner">
@@ -173,6 +243,19 @@
             <span>Bandcamp</span>
           </a>
         </div>
+      </div>
+    </section>
+
+    <!-- Email Signup -->
+    <section id="signup" class="signup-section">
+      <div class="section-inner">
+        <h2 class="section-title">Stay in the Loop</h2>
+        <p class="signup-subtitle">New releases, shows, and updates. No spam.</p>
+        <form id="email-form" class="email-form">
+          <input type="email" id="signup-email" name="email" placeholder="your@email.com" required aria-label="Email address" />
+          <button type="submit" class="form-submit-btn">Subscribe</button>
+        </form>
+        <p class="form-status" id="email-status"></p>
       </div>
     </section>
 

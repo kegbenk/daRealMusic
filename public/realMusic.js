@@ -161,6 +161,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         setupKeyboardNav();
         setupNavToggle();
         setupSmoothScroll();
+        setupEmailForm();
+        setupLicensingForm();
     } catch (error) {
         console.error('Error initializing player:', error);
     }
@@ -408,4 +410,75 @@ function setupSmoothScroll() {
             }
         });
     });
+}
+
+// Email signup form
+function setupEmailForm() {
+    const form = document.getElementById('email-form');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const status = document.getElementById('email-status');
+        const email = document.getElementById('signup-email').value;
+
+        try {
+            const res = await fetch('/api/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            const data = await res.json();
+            status.textContent = data.message || 'Subscribed!';
+            if (res.ok) form.reset();
+        } catch {
+            status.textContent = 'Something went wrong. Try again.';
+        }
+    });
+}
+
+// Licensing inquiry form
+function setupLicensingForm() {
+    const form = document.getElementById('licensing-form');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const status = document.getElementById('licensing-status');
+
+        const body = {
+            name: document.getElementById('lic-name').value,
+            email: document.getElementById('lic-email').value,
+            project: document.getElementById('lic-project').value,
+            message: document.getElementById('lic-message').value
+        };
+
+        try {
+            const res = await fetch('/api/licensing', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            status.textContent = data.message || 'Inquiry sent!';
+            if (res.ok) form.reset();
+        } catch {
+            status.textContent = 'Something went wrong. Try again.';
+        }
+    });
+}
+
+// Purchase handler (placeholder for Stripe integration)
+function handlePurchase(type) {
+    // TODO: Replace with Stripe Checkout or payment link
+    // For now, redirect to email with purchase intent
+    const subject = encodeURIComponent(
+        type === 'album' ? 'Album Purchase - Life Under Bittherium' :
+        type === 'single' ? 'Single Track Purchase' :
+        'Support / Name Your Price'
+    );
+    const body = encodeURIComponent(
+        `I'd like to purchase: ${type === 'album' ? 'Full Album' : type === 'single' ? 'Single Track' : 'Name Your Price'}\n\nPlease send payment details.`
+    );
+    window.location.href = `mailto:contact@pleromallc.com?subject=${subject}&body=${body}`;
 }
