@@ -2,79 +2,195 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8" />
-    <link
-      href="https://fonts.googleapis.com/css?family=Roboto&display=swap"
-      rel="stylesheet"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Stream 'Life Under Bittherium' by DrainBow. Original music from Hot 'n Tasty Music, a Pleroma LLC imprint." />
+    <meta name="theme-color" content="#2d2d2d" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="DrainBow - Life Under Bittherium" />
+    <meta property="og:description" content="Stream the album 'Life Under Bittherium' by DrainBow. Hot 'n Tasty Music, a Pleroma LLC imprint." />
+    <meta property="og:image" content="/img/album.png" />
+    <meta property="og:type" content="music.album" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="DrainBow - Life Under Bittherium" />
+    <meta name="twitter:description" content="Stream the album 'Life Under Bittherium' by DrainBow." />
+    <meta name="twitter:image" content="/img/album.png" />
+
+    <title>DrainBow - Life Under Bittherium | Hot 'n Tasty Music</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/js/all.min.js"
       integrity="sha512-6sSYJqDreZRZGkJ3b+YfdhB3MzmuP9R7X1QZ6g5aIXhRvR1Y/N/P47jmnkENm7YL3oqsmI6AK+V6AD99uWDnIw=="
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
+      defer
     ></script>
-    <title>Hot 'n Tasty Music</title>
     <link rel="stylesheet" href="realmusic.css" media="all" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "MusicAlbum",
+      "name": "Life Under Bittherium",
+      "byArtist": {
+        "@type": "MusicGroup",
+        "name": "DrainBow"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Pleroma LLC"
+      },
+      "albumProductionType": "StudioAlbum"
+    }
+    </script>
   </head>
   <body>
-    <header class="site-header">
-      <h1>© Hot 'n Tasty Music</h1>
-    </header>
+    <!-- Skip to content -->
+    <a href="#player" class="skip-link">Skip to player</a>
 
-    <audio id="myAudio" ontimeupdate="onTimeUpdate()">
-      <!-- <source src="audio.ogg" type="audio/ogg"> -->
-      <source id="source-audio" src="" type="audio/mpeg" />
-      Your browser does not support the audio element.
-    </audio>
+    <!-- Navigation -->
+    <nav class="main-nav" role="navigation" aria-label="Main navigation">
+      <div class="nav-brand">Hot 'n Tasty Music</div>
+      <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+        <i class="fas fa-bars" aria-hidden="true"></i>
+      </button>
+      <ul class="nav-links">
+        <li><a href="#hero">Home</a></li>
+        <li><a href="#player">Player</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#listen">Listen</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
 
-    <div class="player-ctn">
-      <div class="infos-ctn">
-        <div class="timer">00:00</div>
-        <div class="title"></div>
-        <div class="duration">00:00</div>
-      </div>
-      <div id="myProgress">
-        <div id="myBar"></div>
-      </div>
-      <div class="btn-ctn">
-        <div class="btn-action first-btn" onclick="previous()">
-          <div id="btn-faws-back">
-            <i class="fas fa-step-backward"></i>
-          </div>
-        </div>
-        <div class="btn-action" onclick="rewind()">
-          <div id="btn-faws-rewind">
-            <i class="fas fa-backward"></i>
-          </div>
-        </div>
-        <div class="btn-action" onclick="toggleAudio()">
-          <div id="btn-faws-play-pause">
-            <i class="fas fa-play" id="icon-play"></i>
-            <i class="fas fa-pause" id="icon-pause" style="display: none"></i>
-          </div>
-        </div>
-        <div class="btn-play" onclick="forward()">
-          <div id="btn-faws-forward">
-            <i class="fas fa-forward"></i>
-          </div>
-        </div>
-        <div class="btn-action" onclick="next()">
-          <div id="btn-faws-next">
-            <i class="fas fa-step-forward"></i>
-          </div>
-        </div>
-        <div class="btn-mute" id="toggleMute" onclick="toggleMute()">
-          <div id="btn-faws-volume">
-            <i id="icon-vol-up" class="fas fa-volume-up"></i>
-            <i
-              id="icon-vol-mute"
-              class="fas fa-volume-mute"
-              style="display: none"
-            ></i>
-          </div>
+    <!-- Hero Section -->
+    <section id="hero" class="hero-section">
+      <div class="hero-content">
+        <img src="img/album.png" alt="Life Under Bittherium album artwork by DrainBow" class="hero-album-art" />
+        <div class="hero-text">
+          <h1 class="hero-artist">DrainBow</h1>
+          <h2 class="hero-album">Life Under Bittherium</h2>
+          <p class="hero-tagline">Sound from the edge. Music that hits different.</p>
+          <a href="#player" class="hero-cta">
+            <i class="fas fa-play" aria-hidden="true"></i> Listen Now
+          </a>
         </div>
       </div>
-      <div class="playlist-ctn"></div>
-    </div>
-    <script src="realMusic.js"></script>
+    </section>
+
+    <!-- Player Section -->
+    <section id="player" class="player-section">
+      <audio id="myAudio">
+        <source id="source-audio" src="" type="audio/mpeg" />
+        Your browser does not support the audio element.
+      </audio>
+
+      <!-- ARIA live region for track announcements -->
+      <div class="sr-only" aria-live="polite" id="track-announcement"></div>
+
+      <div class="player-ctn">
+        <div class="infos-ctn">
+          <div class="timer" aria-label="Current time">00:00</div>
+          <div class="title" aria-label="Now playing"></div>
+          <div class="duration" aria-label="Total duration">00:00</div>
+        </div>
+        <div id="myProgress" role="progressbar" aria-label="Track progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" tabindex="0">
+          <div id="myBar"></div>
+        </div>
+        <div class="btn-ctn">
+          <button class="btn-action first-btn" onclick="previous()" aria-label="Previous track">
+            <i class="fas fa-step-backward" aria-hidden="true"></i>
+          </button>
+          <button class="btn-action" onclick="rewind()" aria-label="Rewind 10 seconds">
+            <i class="fas fa-backward" aria-hidden="true"></i>
+          </button>
+          <button class="btn-action" onclick="toggleAudio()" aria-label="Play or pause" id="btn-play-pause">
+            <i class="fas fa-play" id="icon-play" aria-hidden="true"></i>
+            <i class="fas fa-pause" id="icon-pause" style="display: none" aria-hidden="true"></i>
+          </button>
+          <button class="btn-action" onclick="forward()" aria-label="Forward 10 seconds">
+            <i class="fas fa-forward" aria-hidden="true"></i>
+          </button>
+          <button class="btn-action" onclick="next()" aria-label="Next track">
+            <i class="fas fa-step-forward" aria-hidden="true"></i>
+          </button>
+          <button class="btn-action" id="toggleMute" onclick="toggleMute()" aria-label="Toggle mute">
+            <i id="icon-vol-up" class="fas fa-volume-up" aria-hidden="true"></i>
+            <i id="icon-vol-mute" class="fas fa-volume-mute" style="display: none" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="playlist-ctn" role="list" aria-label="Playlist"></div>
+      </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about-section">
+      <div class="section-inner">
+        <h2 class="section-title">About</h2>
+        <div class="about-grid">
+          <div class="about-card">
+            <h3>DrainBow</h3>
+            <p>DrainBow channels raw energy and unfiltered expression into sound. With <em>Life Under Bittherium</em>, the boundaries between genres dissolve into something urgent and alive &mdash; music built from the ground up with no compromises.</p>
+          </div>
+          <div class="about-card">
+            <h3>Hot 'n Tasty Music</h3>
+            <p>The creative imprint of Pleroma LLC. Hot 'n Tasty Music is where original sounds find their home &mdash; a platform for artists who make music that doesn't fit neatly into boxes but hits hard all the same.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Distribution Links Section -->
+    <section id="listen" class="listen-section">
+      <div class="section-inner">
+        <h2 class="section-title">Find Us Everywhere</h2>
+        <div class="platform-links">
+          <a href="#" class="platform-link" aria-label="Listen on Spotify" target="_blank" rel="noopener noreferrer">
+            <i class="fab fa-spotify" aria-hidden="true"></i>
+            <span>Spotify</span>
+          </a>
+          <a href="#" class="platform-link" aria-label="Listen on Apple Music" target="_blank" rel="noopener noreferrer">
+            <i class="fab fa-apple" aria-hidden="true"></i>
+            <span>Apple Music</span>
+          </a>
+          <a href="#" class="platform-link" aria-label="Listen on YouTube Music" target="_blank" rel="noopener noreferrer">
+            <i class="fab fa-youtube" aria-hidden="true"></i>
+            <span>YouTube</span>
+          </a>
+          <a href="#" class="platform-link" aria-label="Listen on SoundCloud" target="_blank" rel="noopener noreferrer">
+            <i class="fab fa-soundcloud" aria-hidden="true"></i>
+            <span>SoundCloud</span>
+          </a>
+          <a href="#" class="platform-link" aria-label="Listen on Bandcamp" target="_blank" rel="noopener noreferrer">
+            <i class="fab fa-bandcamp" aria-hidden="true"></i>
+            <span>Bandcamp</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact" class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-social">
+          <a href="#" aria-label="Instagram" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram" aria-hidden="true"></i></a>
+          <a href="#" aria-label="Twitter" target="_blank" rel="noopener noreferrer"><i class="fab fa-x-twitter" aria-hidden="true"></i></a>
+          <a href="#" aria-label="YouTube" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube" aria-hidden="true"></i></a>
+        </div>
+        <p class="footer-contact">
+          Booking &amp; inquiries: <a href="mailto:contact@pleromallc.com">contact@pleromallc.com</a>
+        </p>
+        <p class="footer-copy">&copy; 2024 Hot 'n Tasty Music &middot; Pleroma LLC</p>
+      </div>
+    </footer>
+
+    <script src="realMusic.js" defer></script>
   </body>
 </html>
