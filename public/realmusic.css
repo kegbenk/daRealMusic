@@ -85,9 +85,67 @@ body {
 }
 
 .nav-brand {
-  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 28px;
+}
+
+.logo-bar {
+  display: block;
+  width: 4px;
+  border-radius: 2px;
+}
+
+.logo-bar-red {
+  height: 24px;
+  background-color: #e84a27;
+}
+
+.logo-bar-cyan {
+  height: 16px;
+  background-color: #00d4ff;
+}
+
+.logo-text {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-size: 17px;
   font-weight: 700;
-  color: var(--accent-gold);
+  letter-spacing: -0.3px;
+  line-height: 1;
+}
+
+.logo-hot {
+  color: #e84a27;
+}
+
+.logo-n {
+  color: #777;
+  font-size: 13px;
+  font-weight: 400;
+  margin: 0 1px;
+}
+
+.logo-tasty {
+  color: #00d4ff;
+}
+
+.logo-music {
+  color: #888;
+  font-weight: 400;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-left: 4px;
 }
 
 .nav-toggle {
