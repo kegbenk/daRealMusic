@@ -12,7 +12,8 @@
   --text-light: #ccc;
   --progress-bg: #555;
   --white: #f0f0f0;
-  --font-family: 'Roboto', sans-serif;
+  --font-family: 'Outfit', sans-serif;
+  --font-logo: 'Space Grotesk', sans-serif;
   --transition-speed: 0.2s;
   --nav-height: 56px;
 }
@@ -120,10 +121,11 @@ body {
 .logo-text {
   display: flex;
   align-items: baseline;
-  gap: 3px;
-  font-size: 17px;
+  gap: 2px;
+  font-family: var(--font-logo);
+  font-size: 18px;
   font-weight: 700;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.5px;
   line-height: 1;
 }
 
@@ -132,9 +134,9 @@ body {
 }
 
 .logo-n {
-  color: #777;
-  font-size: 13px;
-  font-weight: 400;
+  color: #555;
+  font-size: 12px;
+  font-weight: 500;
   margin: 0 1px;
 }
 
@@ -143,12 +145,12 @@ body {
 }
 
 .logo-music {
-  color: #888;
-  font-weight: 400;
-  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-left: 4px;
+  letter-spacing: 3px;
+  margin-left: 5px;
 }
 
 .nav-toggle {
