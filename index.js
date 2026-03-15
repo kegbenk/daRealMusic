@@ -3,6 +3,7 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const { s3, testS3 } = require('./config/aws');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const DATA_DIR = path.join(__dirname, 'data');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
@@ -204,6 +205,125 @@ app.post('/api/licensing', (req, res) => {
     inquiries.push({ name, email, project, message, date: new Date().toISOString() });
     fs.writeFileSync(file, JSON.stringify(inquiries, null, 2));
     res.json({ message: 'Inquiry received' });
+});
+
+// Stripe checkout
+app.post('/api/checkout', async (req, res) => {
+    try {
+        const { type, trackName } = req.body;
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+        let lineItems;
+        if (type === 'album') {
+            lineItems = [{
+                price_data: {
+                    currency: 'usd',
+                    product_data: {
+                        name: 'Life Under Bittherium (Full Album)',
+                        description: 'Full album download - High-quality MP3 (320kbps)',
+                        images: [`${baseUrl}/img/album.png`],
+                    },
+                    unit_amount: 1000, // $10.00
+                },
+                quantity: 1,
+            }];
+        } else if (type === 'single') {
+            lineItems = [{
+                price_data: {
+                    currency: 'usd',
+                    product_data: {
+                        name: trackName || 'Single Track',
+                        description: 'Single track download - High-quality MP3 (320kbps)',
+                        images: [`${baseUrl}/img/album.png`],
+                    },
+                    unit_amount: 100, // $1.00
+                },
+                quantity: 1,
+            }];
+        } else if (type === 'custom') {
+            lineItems = [{
+                price_data: {
+                    currency: 'usd',
+                    product_data: {
+                        name: 'Life Under Bittherium (Support)',
+                        description: 'Full album + extras - Name your price',
+                        images: [`${baseUrl}/img/album.png`],
+                    },
+                    unit_amount: 500, // $5.00 minimum
+                },
+                quantity: 1,
+                adjustable_quantity: { enabled: false },
+            }];
+        } else {
+            return res.status(400).json({ error: 'Invalid purchase type' });
+        }
+
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: lineItems,
+            mode: 'payment',
+            success_url: `${baseUrl}/success.html?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${baseUrl}/#buy`,
+            metadata: { type, trackName: trackName || '' },
+            ...(type === 'custom' && {
+                custom_fields: [{
+                    key: 'tip_amount',
+                    label: { type: 'custom', custom: 'Want to add more? Enter extra amount' },
+                    type: 'numeric',
+                    optional: true,
+                }],
+            }),
+        });
+
+        res.json({ url: session.url });
+    } catch (error) {
+        console.error('Stripe checkout error:', error.message);
+        res.status(500).json({ error: 'Failed to create checkout session' });
+    }
+});
+
+// Verify purchase and provide download links
+app.get('/api/download', async (req, res) => {
+    try {
+        const { session_id } = req.query;
+        if (!session_id) {
+            return res.status(400).json({ error: 'Missing session ID' });
+        }
+
+        const session = await stripe.checkout.sessions.retrieve(session_id);
+        if (session.payment_status !== 'paid') {
+            return res.status(402).json({ error: 'Payment not completed' });
+        }
+
+        // Get the track list for download links
+        const type = session.metadata.type;
+        const cloudfrontDomain = process.env.CLOUDFRONT_DOMAIN;
+
+        if (type === 'album' || type === 'custom') {
+            // Return all tracks
+            const params = {
+                Bucket: process.env.S3_BUCKET_NAME,
+                Key: 'music_metadata.json'
+            };
+            const data = await s3.getObject(params).promise();
+            const tracks = JSON.parse(data.Body.toString());
+
+            const downloads = tracks.map(track => ({
+                name: track.name,
+                url: `https://${cloudfrontDomain}/${track.file}`
+            }));
+            res.json({ downloads, type: 'album' });
+        } else if (type === 'single') {
+            const trackName = session.metadata.trackName;
+            res.json({
+                downloads: [{ name: trackName, url: `https://${cloudfrontDomain}/${trackName}.mp3` }],
+                type: 'single'
+            });
+        }
+    } catch (error) {
+        console.error('Download verification error:', error.message);
+        res.status(500).json({ error: 'Failed to verify purchase' });
+    }
 });
 
 // Start the server

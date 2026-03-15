@@ -468,17 +468,35 @@ function setupLicensingForm() {
     });
 }
 
-// Purchase handler (placeholder for Stripe integration)
-function handlePurchase(type) {
-    // TODO: Replace with Stripe Checkout or payment link
-    // For now, redirect to email with purchase intent
-    const subject = encodeURIComponent(
-        type === 'album' ? 'Album Purchase - Life Under Bittherium' :
-        type === 'single' ? 'Single Track Purchase' :
-        'Support / Name Your Price'
-    );
-    const body = encodeURIComponent(
-        `I'd like to purchase: ${type === 'album' ? 'Full Album' : type === 'single' ? 'Single Track' : 'Name Your Price'}\n\nPlease send payment details.`
-    );
-    window.location.href = `mailto:contact@pleromallc.com?subject=${subject}&body=${body}`;
+// Stripe Checkout purchase handler
+async function handlePurchase(type) {
+    const btn = event.currentTarget;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = 'Loading...';
+
+    try {
+        // For single track, use the currently selected track name
+        const trackName = (type === 'single' && listAudio[indexAudio])
+            ? listAudio[indexAudio].name
+            : undefined;
+
+        const res = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type, trackName })
+        });
+
+        const data = await res.json();
+        if (data.url) {
+            window.location.href = data.url;
+        } else {
+            throw new Error(data.error || 'Checkout failed');
+        }
+    } catch (err) {
+        console.error('Purchase error:', err);
+        alert('Something went wrong. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
 }
