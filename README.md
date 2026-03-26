@@ -1,17 +1,69 @@
 # daRealMusic
 
-A modern music player application that allows users to stream music files directly from AWS S3 through CloudFront. The application features a responsive design, dynamic playlist management, and efficient audio streaming.
+`daRealMusic` is a direct-to-fan music storefront and artist-owned listening experience. It lets an artist or imprint stream music from its own infrastructure, sell directly, capture fan intent, and route higher-value revenue like downloads, support payments, and licensing.
+
+This should not be treated as “a better streaming app.” The strategic role of `daRealMusic` is to help artists own the customer relationship after discovery happens elsewhere.
+
+## Business Position
+
+The core business thesis is:
+
+- DSPs are discovery rails, not the primary business
+- artists need owned audience and direct monetization
+- the winning unit of economics is revenue per fan, not stream count
+- niche fan communities are more valuable than undifferentiated mass reach
+
+For the fuller business plan, see [BUSINESS_PLAN.md](/Users/benjaminkeller/PLEROMA/MUSICTECH/daRealMusic/BUSINESS_PLAN.md).
 
 ## Features
 
 - Stream music files directly from AWS S3 through CloudFront
-- Dynamic playlist management with automatic metadata updates
+- Artist-branded listening page
+- Direct album and single purchase flows
+- Pay-what-you-want support path
+- Licensing inquiry capture
 - Responsive design optimized for both desktop and mobile
 - Cross-platform audio playback with iOS compatibility
 - Real-time audio progress tracking
 - Volume control and mute functionality
 - Automatic playlist generation from S3 bucket contents
 - Secure file access through CloudFront distribution
+
+## Product Thesis
+
+`daRealMusic` is best understood as a lightweight artist-commerce and fan-ownership layer.
+
+Current wedge:
+
+- artist microsite
+- owned player
+- direct digital sales
+- support payments
+- sync/licensing intake
+
+Next wedge:
+
+- Laylo-powered email/SMS capture
+- supporter identity
+- direct fan analytics
+- premium bundles
+- gated extras
+- community routing, including Discord for high-intent fans
+
+## Recommended External Integration
+
+The fastest way to make `daRealMusic` commercially stronger is to integrate Laylo for:
+
+- release-drop signups
+- email and SMS capture
+- reminders and reactivation
+- campaign segmentation
+
+Recommended operating model:
+
+- `daRealMusic` is the owned storefront and listening experience
+- Laylo handles opt-in capture and drop messaging
+- fans are routed back to `daRealMusic` for purchase, support, and conversion
 
 ## Architecture
 
@@ -59,12 +111,96 @@ Create a `.env` file in the root directory with the following variables:
 
 ```env
 NODE_ENV=production
-AWS_REGION=us-east-1
+PORT=3000
+AWS_REGION=us-east-2
 AWS_ACCESS_KEY_ID=your_access_key
 AWS_SECRET_ACCESS_KEY=your_secret_key
 S3_BUCKET_NAME=your-music-bucket
 CLOUDFRONT_DOMAIN=your-cloudfront-domain.cloudfront.net
+ARTIST_NAME=Drainbow
+RELEASE_TITLE=Life Under Bittherium
+FAN_CAPTURE_MODE=laylo_redirect
+CAMPAIGN_ID=life-under-bittherium-drop
+CAMPAIGN_STATUS=collecting
+RELEASE_DATE=
+CAMPAIGN_HEADLINE=Join the drop and stay close to the release.
+CAMPAIGN_GOAL_SIGNUPS=250
+LAYLO_DROP_URL=https://laylo.com/your-drop
+LAYLO_PROFILE_URL=https://laylo.com/your-profile
+DISCORD_INVITE_URL=https://discord.gg/your-invite
 ```
+
+`FAN_CAPTURE_MODE` works like this:
+
+- `laylo_redirect`: capture the fan locally, then open the configured Laylo page
+- `local`: keep the fan fully inside `daRealMusic` and store signup locally
+
+## Owned Fan Funnel
+
+The app now includes a first-pass owned-fan capture layer:
+
+- `Join the Drop` CTAs open a capture modal
+- the app stores local fan profiles and capture events
+- if Laylo is configured, the user is sent to the Laylo drop/profile after capture
+- Discord links can be configured from env and inherit attribution parameters
+
+Local capture artifacts are written to:
+
+- `data/subscribers.json`
+- `data/fan-profiles.json`
+- `data/fan-capture-events.json`
+
+There is also a simple local reporting endpoint:
+
+- `GET /api/fan-capture-report`
+
+## Native Drop Campaigns
+
+`daRealMusic` now has a native drop-campaign layer even without Laylo:
+
+- campaign config is driven by env
+- signup and buyer counts are computed locally
+- the landing page surfaces campaign status and goal progress
+- fan profiles are tagged by stage:
+  - `listener`
+  - `subscriber`
+  - `buyer`
+  - `supporter`
+  - `patron`
+
+Campaign endpoints:
+
+- `GET /api/drop-campaign`
+- `POST /api/drop-campaign`
+
+Local campaign storage:
+
+- `data/drop-campaigns.json`
+- `data/fan-capture-events.json`
+- `data/fan-profiles.json`
+
+## Supporter Library
+
+The app now also includes a lightweight supporter identity layer:
+
+- successful purchases create or update a supporter profile
+- supporters get a persistent library URL tied to their token
+- the library shows:
+  - purchase history
+  - download links
+  - supporter tier
+  - next-step actions like drop signup or Discord
+
+Artifacts are written locally to:
+
+- `data/purchases.json`
+- `data/supporters.json`
+
+Supporter endpoints:
+
+- `GET /api/download`
+- `GET /api/redownload`
+- `GET /api/supporter-library`
 
 ## Installation
 

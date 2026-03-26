@@ -2,10 +2,43 @@
 let listAudio = [];
 let currentAudio = null;
 let indexAudio = 0;
+let siteConfig = {
+    cloudfrontDomain: 'dpv15oji5tyx0.cloudfront.net',
+    layloDropUrl: '',
+    layloProfileUrl: '',
+    discordInviteUrl: '',
+    artistName: 'Drainbow',
+    releaseTitle: 'Life Under Bittherium',
+    fanCaptureMode: 'local'
+};
+let captureContext = {
+    placement: 'signup-form',
+    intent: 'drop'
+};
+let dropCampaign = null;
+
+function buildMarketingUrl(url, email) {
+    const target = new URL(url, window.location.origin);
+    target.searchParams.set('utm_source', 'darealmusic');
+    target.searchParams.set('utm_medium', 'owned-site');
+    target.searchParams.set('utm_campaign', 'join-the-drop');
+    if (email) target.searchParams.set('email', email);
+    return target.toString();
+}
+
+function formatCampaignStatus(status) {
+    const labels = {
+        collecting: 'Collecting',
+        announced: 'Announced',
+        live: 'Live now',
+        closed: 'Closed'
+    };
+    return labels[status] || 'Collecting';
+}
 
 // CloudFront URL for audio files
 function getSignedUrl(songKey) {
-    return `https://dpv15oji5tyx0.cloudfront.net/${songKey}`;
+    return `https://${siteConfig.cloudfrontDomain}/${songKey}`;
 }
 
 // Format seconds to MM:SS
@@ -116,7 +149,7 @@ function updateMediaSession(track) {
 
     navigator.mediaSession.metadata = new MediaMetadata({
         title: track.name,
-        artist: 'DrainBow',
+        artist: 'Drainbow',
         album: 'Life Under Bittherium',
         artwork: [
             { src: '/img/album.png', sizes: '960x642', type: 'image/png' }
@@ -141,12 +174,23 @@ document.addEventListener('DOMContentLoaded', async function() {
         currentAudio = document.getElementById("myAudio");
         if (!currentAudio) throw new Error('Audio element not found');
 
+        try {
+            const response = await fetch('/api/site-config');
+            if (response.ok) {
+                siteConfig = { ...siteConfig, ...(await response.json()) };
+            }
+        } catch (error) {
+            console.warn('Falling back to default site config:', error);
+        }
+
         currentAudio.addEventListener('timeupdate', onTimeUpdate);
         currentAudio.addEventListener('ended', () => {
             if (indexAudio < listAudio.length - 1) {
                 loadNewTrack(indexAudio + 1);
             }
         });
+
+        await loadDropCampaign();
 
         await loadMusicList();
 
@@ -164,6 +208,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         setupKeyboardNav();
         setupNavToggle();
         setupSmoothScroll();
+        setupMarketingLinks();
+        setupTracklistToggle();
+        setupCaptureModal();
+        setupCaptureForm();
         setupEmailForm();
         setupLicensingForm();
     } catch (error) {
@@ -183,6 +231,49 @@ function updatePlaylistIcons(playingIndex) {
             icon.classList.add('fa-play');
         }
     });
+}
+
+async function loadDropCampaign() {
+    try {
+        const response = await fetch('/api/drop-campaign');
+        if (!response.ok) {
+            throw new Error('Failed to load campaign');
+        }
+        dropCampaign = await response.json();
+        renderDropCampaign();
+    } catch (error) {
+        console.warn('Unable to load campaign report:', error);
+    }
+}
+
+function renderDropCampaign() {
+    if (!dropCampaign) return;
+
+    const campaign = dropCampaign.campaign || {};
+    const metrics = dropCampaign.metrics || {};
+
+    const statusChip = document.getElementById('campaign-status-chip');
+    const goalChip = document.getElementById('campaign-goal-chip');
+    const signupCount = document.getElementById('signup-count-stat');
+    const buyerCount = document.getElementById('buyer-count-stat');
+    const conversion = document.getElementById('conversion-stat');
+    const signupSubtitle = document.querySelector('.signup-subtitle');
+
+    if (statusChip) {
+        statusChip.textContent = formatCampaignStatus(campaign.status);
+    }
+    if (goalChip) {
+        const goal = campaign.goalSignups || 0;
+        goalChip.textContent = goal
+            ? `${metrics.signups || 0}/${goal} drop signups`
+            : `${metrics.signups || 0} drop signups`;
+    }
+    if (signupCount) signupCount.textContent = String(metrics.signups || 0);
+    if (buyerCount) buyerCount.textContent = String(metrics.buyers || 0);
+    if (conversion) conversion.textContent = `${metrics.conversionRate || 0}%`;
+    if (signupSubtitle && campaign.headline) {
+        signupSubtitle.textContent = campaign.headline;
+    }
 }
 
 // Update playlist styling for active track
@@ -415,6 +506,114 @@ function setupSmoothScroll() {
     });
 }
 
+function setupTracklistToggle() {
+    const toggle = document.getElementById('tracklist-toggle');
+    const panel = document.getElementById('playlist-panel');
+    if (!toggle || !panel) return;
+
+    toggle.addEventListener('click', () => {
+        const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', String(!isExpanded));
+        panel.hidden = isExpanded;
+        const label = toggle.querySelector('span');
+        if (label) {
+            label.textContent = isExpanded ? 'Show tracklist' : 'Hide tracklist';
+        }
+    });
+}
+
+function setupMarketingLinks() {
+    const dropLinkIds = ['join-drop-hero-link', 'join-drop-community-link'];
+    dropLinkIds.forEach((id) => {
+        const link = document.getElementById(id);
+        if (!link) return;
+        link.setAttribute('href', '#signup');
+    });
+
+    if (siteConfig.discordInviteUrl) {
+        const discordLink = document.getElementById('discord-community-link');
+        if (discordLink) {
+            discordLink.setAttribute('href', buildMarketingUrl(siteConfig.discordInviteUrl));
+        }
+    }
+}
+
+function openCaptureModal({ placement = 'unknown', intent = 'drop' } = {}) {
+    captureContext = { placement, intent };
+    const modal = document.getElementById('capture-modal');
+    const placementInput = document.getElementById('capture-placement');
+    const intentInput = document.getElementById('capture-intent');
+    const status = document.getElementById('capture-status');
+    if (!modal || !placementInput || !intentInput) return;
+
+    placementInput.value = placement;
+    intentInput.value = intent;
+    if (status) status.textContent = '';
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+
+    const emailInput = document.getElementById('capture-email');
+    if (emailInput) {
+        emailInput.focus();
+    }
+}
+
+function closeCaptureModal() {
+    const modal = document.getElementById('capture-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
+function setupCaptureModal() {
+    document.querySelectorAll('[data-capture-trigger="true"]').forEach((trigger) => {
+        trigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            openCaptureModal({
+                placement: trigger.getAttribute('data-placement') || 'unknown',
+                intent: trigger.getAttribute('data-intent') || 'drop'
+            });
+        });
+    });
+
+    document.querySelectorAll('[data-capture-close="true"]').forEach((node) => {
+        node.addEventListener('click', closeCaptureModal);
+    });
+
+    const closeButton = document.getElementById('capture-close');
+    if (closeButton) closeButton.addEventListener('click', closeCaptureModal);
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeCaptureModal();
+        }
+    });
+}
+
+async function submitFanCapture({ email, name, placement, intent }) {
+    const params = new URLSearchParams(window.location.search);
+    const res = await fetch('/api/fan-capture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            email,
+            name,
+            placement,
+            intent,
+            source: 'darealmusic',
+            utmSource: params.get('utm_source') || 'darealmusic',
+            utmMedium: params.get('utm_medium') || 'owned-site',
+            utmCampaign: params.get('utm_campaign') || 'join-the-drop'
+        })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+        throw new Error(data.error || 'Capture failed');
+    }
+    return data;
+}
+
 // Email signup form
 function setupEmailForm() {
     const form = document.getElementById('email-form');
@@ -424,18 +623,61 @@ function setupEmailForm() {
         e.preventDefault();
         const status = document.getElementById('email-status');
         const email = document.getElementById('signup-email').value;
+        const name = document.getElementById('signup-name')?.value || '';
 
         try {
-            const res = await fetch('/api/subscribe', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
+            const data = await submitFanCapture({
+                email,
+                name,
+                placement: 'signup-form',
+                intent: 'drop'
             });
-            const data = await res.json();
-            status.textContent = data.message || 'Subscribed!';
-            if (res.ok) form.reset();
+            status.textContent = data.message || 'You are in the loop.';
+            form.reset();
+            if (data.campaign) {
+                await loadDropCampaign();
+            }
+            if (data.nextUrl) {
+                window.open(data.nextUrl, '_blank', 'noopener,noreferrer');
+            }
         } catch {
             status.textContent = 'Something went wrong. Try again.';
+        }
+    });
+}
+
+function setupCaptureForm() {
+    const form = document.getElementById('capture-form');
+    if (!form) return;
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const status = document.getElementById('capture-status');
+        const email = document.getElementById('capture-email')?.value || '';
+        const name = document.getElementById('capture-name')?.value || '';
+
+        try {
+            const data = await submitFanCapture({
+                email,
+                name,
+                placement: captureContext.placement,
+                intent: captureContext.intent
+            });
+            if (status) {
+                status.textContent = data.message || 'You are in the loop.';
+            }
+            form.reset();
+            if (data.campaign) {
+                await loadDropCampaign();
+            }
+            if (data.nextUrl) {
+                window.open(data.nextUrl, '_blank', 'noopener,noreferrer');
+            }
+            window.setTimeout(closeCaptureModal, 300);
+        } catch (error) {
+            if (status) {
+                status.textContent = error.message || 'Something went wrong. Try again.';
+            }
         }
     });
 }

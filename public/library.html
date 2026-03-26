@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Supporter Library | Hot 'n Tasty Music</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="realmusic.css" media="all" />
+  </head>
+  <body class="library-page">
+    <main class="library-shell">
+      <section class="library-hero">
+        <p class="hero-kicker">Supporter library</p>
+        <h1 class="library-title">Your direct-to-artist archive</h1>
+        <p class="library-subtitle" id="library-status">Loading your library...</p>
+      </section>
+
+      <section class="library-grid">
+        <div class="library-card">
+          <h2>Supporter Profile</h2>
+          <div id="supporter-profile" class="library-profile"></div>
+        </div>
+
+        <div class="library-card">
+          <h2>Next Moves</h2>
+          <div class="library-actions" id="library-actions"></div>
+        </div>
+      </section>
+
+      <section class="library-card">
+        <h2>Downloads</h2>
+        <div id="library-downloads" class="library-downloads"></div>
+      </section>
+
+      <p class="library-back">
+        <a href="/">Back to the release page</a>
+      </p>
+    </main>
+
+    <script>
+      (async function() {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+        const status = document.getElementById('library-status');
+        const profile = document.getElementById('supporter-profile');
+        const actions = document.getElementById('library-actions');
+        const downloads = document.getElementById('library-downloads');
+
+        if (!token) {
+          status.textContent = 'No supporter token found.';
+          return;
+        }
+
+        try {
+          const res = await fetch(`/api/supporter-library?token=${encodeURIComponent(token)}`);
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.error || 'Failed to load library');
+          }
+
+          const supporter = data.supporter || {};
+          status.textContent = supporter.email
+            ? `Welcome back, ${supporter.name || supporter.email}.`
+            : 'Your supporter library is ready.';
+
+          profile.innerHTML = `
+            <div class="library-stat"><span>Email</span><strong>${supporter.email || 'Unknown'}</strong></div>
+            <div class="library-stat"><span>Tier</span><strong>${supporter.supporterTier || 'listener'}</strong></div>
+            <div class="library-stat"><span>Purchases</span><strong>${supporter.totalPurchases || 0}</strong></div>
+            <div class="library-stat"><span>Total support</span><strong>$${((supporter.totalSpendCents || 0) / 100).toFixed(2)}</strong></div>
+          `;
+
+          const actionItems = [];
+          if (data.layloDropUrl) {
+            actionItems.push(`<a class="library-action-link" href="${data.layloDropUrl}" target="_blank" rel="noopener noreferrer">Join the next drop</a>`);
+          }
+          if (data.discordInviteUrl) {
+            actionItems.push(`<a class="library-action-link" href="${data.discordInviteUrl}" target="_blank" rel="noopener noreferrer">Enter the Discord</a>`);
+          }
+          actionItems.push('<a class="library-action-link" href="/#buy">Support the next release</a>');
+          actions.innerHTML = actionItems.join('');
+
+          if (!data.downloads.length) {
+            downloads.innerHTML = '<p class="library-empty">No downloads found yet.</p>';
+            return;
+          }
+
+          downloads.innerHTML = data.downloads.map((purchase) => `
+            <div class="library-download-group">
+              <div class="library-download-header">
+                <div>
+                  <h3>${purchase.type === 'single' ? purchase.trackName : 'Album / Support Bundle'}</h3>
+                  <p>${new Date(purchase.purchasedAt).toLocaleString()}</p>
+                </div>
+                <strong>$${((purchase.amountCents || 0) / 100).toFixed(2)}</strong>
+              </div>
+              <div class="library-download-list">
+                ${purchase.downloads.map((track) => `
+                  <div class="library-download-item">
+                    <span>${track.name}</span>
+                    <a href="${track.url}">Download</a>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `).join('');
+        } catch (error) {
+          status.textContent = error.message;
+        }
+      })();
+    </script>
+  </body>
+</html>

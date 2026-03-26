@@ -3,22 +3,22 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Stream 'Life Under Bittherium' by DrainBow. Original music from Hot 'n Tasty Music, a Pleroma LLC imprint." />
+    <meta name="description" content="Listen to Life Under Bittherium by Drainbow, support the release directly, join the drop list, and stay close to the artist without platform middlemen." />
     <meta name="theme-color" content="#2d2d2d" />
 
     <!-- Open Graph -->
-    <meta property="og:title" content="DrainBow - Life Under Bittherium" />
-    <meta property="og:description" content="Stream the album 'Life Under Bittherium' by DrainBow. Hot 'n Tasty Music, a Pleroma LLC imprint." />
+    <meta property="og:title" content="Drainbow - Life Under Bittherium" />
+    <meta property="og:description" content="Listen, buy direct, join the drop list, and support Drainbow through an artist-owned release page." />
     <meta property="og:image" content="/img/album.png" />
     <meta property="og:type" content="music.album" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="DrainBow - Life Under Bittherium" />
-    <meta name="twitter:description" content="Stream the album 'Life Under Bittherium' by DrainBow." />
+    <meta name="twitter:title" content="Drainbow - Life Under Bittherium" />
+    <meta name="twitter:description" content="Listen, buy direct, and join the drop list for Drainbow." />
     <meta name="twitter:image" content="/img/album.png" />
 
-    <title>DrainBow - Life Under Bittherium | Hot 'n Tasty Music</title>
+    <title>Drainbow - Life Under Bittherium | Hot 'n Tasty Music</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -41,7 +41,7 @@
       "name": "Life Under Bittherium",
       "byArtist": {
         "@type": "MusicGroup",
-        "name": "DrainBow"
+        "name": "Drainbow"
       },
       "publisher": {
         "@type": "Organization",
@@ -68,8 +68,10 @@
         <li><a href="#hero">Home</a></li>
         <li><a href="#player">Player</a></li>
         <li><a href="#buy">Buy</a></li>
-        <li><a href="#licensing">Licensing</a></li>
+        <li><a href="#signup">Join the Drop</a></li>
+        <li><a href="#community">Community</a></li>
         <li><a href="#about">About</a></li>
+        <li><a href="#licensing">Licensing</a></li>
         <li><a href="#contact">Contact</a></li>
       </ul>
     </nav>
@@ -77,60 +79,78 @@
     <!-- Hero Section -->
     <section id="hero" class="hero-section">
       <div class="hero-content">
-        <img src="img/album.png" alt="Life Under Bittherium album artwork by DrainBow" class="hero-album-art" />
+        <img src="img/album.png" alt="Life Under Bittherium album artwork by Drainbow" class="hero-album-art" />
         <div class="hero-text">
-          <h1 class="hero-artist">DrainBow</h1>
+          <h1 class="hero-artist">Drainbow</h1>
           <h2 class="hero-album">Life Under Bittherium</h2>
-          <p class="hero-tagline">a wild ride</p>
-          <a href="#player" class="hero-cta">
-            <i class="fas fa-play" aria-hidden="true"></i> Listen Now
-          </a>
-        </div>
-      </div>
-    </section>
+          <p class="hero-tagline">A direct line into the release. Listen first, support if it hits, and get the next drop without waiting for an algorithm to notice you.</p>
+          <div class="hero-cta-row">
+            <a href="#signup" class="hero-cta hero-cta-secondary" id="join-drop-hero-link" data-capture-trigger="true" data-placement="hero-primary" data-intent="drop">
+              <i class="fas fa-bolt" aria-hidden="true"></i> Join the Drop
+            </a>
+            <a href="#player" class="hero-cta">
+              <i class="fas fa-play" aria-hidden="true"></i> Listen Now
+            </a>
+          </div>
+          <div class="hero-proof release-note">
+            <div class="hero-proof-card">
+              <span class="hero-proof-label">Release note</span>
+              <p><em>Life Under Bittherium</em> is the world this page revolves around: hear the record, buy the files, join the list, and stay close enough to catch what comes after.</p>
+            </div>
+          </div>
 
-    <!-- Player Section -->
-    <section id="player" class="player-section">
-      <audio id="myAudio">
-        <source id="source-audio" src="" type="audio/mpeg" />
-        Your browser does not support the audio element.
-      </audio>
+          <section id="player" class="hero-player-shell" aria-label="Music player">
+            <audio id="myAudio">
+              <source id="source-audio" src="" type="audio/mpeg" />
+              Your browser does not support the audio element.
+            </audio>
 
-      <!-- ARIA live region for track announcements -->
-      <div class="sr-only" aria-live="polite" id="track-announcement"></div>
+            <div class="sr-only" aria-live="polite" id="track-announcement"></div>
 
-      <div class="player-ctn">
-        <div class="infos-ctn">
-          <div class="timer" aria-label="Current time">00:00</div>
-          <div class="title" aria-label="Now playing"></div>
-          <div class="duration" aria-label="Total duration">00:00</div>
+            <div class="player-ctn player-ctn-compact">
+              <div class="player-meta-row">
+                <span class="player-kicker">Listen here</span>
+                <button class="tracklist-toggle" id="tracklist-toggle" type="button" aria-expanded="false" aria-controls="playlist-panel">
+                  <span>Show tracklist</span>
+                  <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div class="infos-ctn">
+                <div class="timer" aria-label="Current time">00:00</div>
+                <div class="title" aria-label="Now playing"></div>
+                <div class="duration" aria-label="Total duration">00:00</div>
+              </div>
+              <div id="myProgress" role="progressbar" aria-label="Track progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" tabindex="0">
+                <div id="myBar"></div>
+              </div>
+              <div class="btn-ctn">
+                <button class="btn-action first-btn" onclick="previous()" aria-label="Previous track">
+                  <i class="fas fa-step-backward" aria-hidden="true"></i>
+                </button>
+                <button class="btn-action" onclick="rewind()" aria-label="Rewind 10 seconds">
+                  <i class="fas fa-backward" aria-hidden="true"></i>
+                </button>
+                <button class="btn-action btn-action-primary" onclick="toggleAudio()" aria-label="Play or pause" id="btn-play-pause">
+                  <i class="fas fa-play" id="icon-play" aria-hidden="true"></i>
+                  <i class="fas fa-pause" id="icon-pause" style="display: none" aria-hidden="true"></i>
+                </button>
+                <button class="btn-action" onclick="forward()" aria-label="Forward 10 seconds">
+                  <i class="fas fa-forward" aria-hidden="true"></i>
+                </button>
+                <button class="btn-action" onclick="next()" aria-label="Next track">
+                  <i class="fas fa-step-forward" aria-hidden="true"></i>
+                </button>
+                <button class="btn-action" id="toggleMute" onclick="toggleMute()" aria-label="Toggle mute">
+                  <i id="icon-vol-up" class="fas fa-volume-up" aria-hidden="true"></i>
+                  <i id="icon-vol-mute" class="fas fa-volume-mute" style="display: none" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div class="playlist-panel" id="playlist-panel" hidden>
+                <div class="playlist-ctn" role="list" aria-label="Playlist"></div>
+              </div>
+            </div>
+          </section>
         </div>
-        <div id="myProgress" role="progressbar" aria-label="Track progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" tabindex="0">
-          <div id="myBar"></div>
-        </div>
-        <div class="btn-ctn">
-          <button class="btn-action first-btn" onclick="previous()" aria-label="Previous track">
-            <i class="fas fa-step-backward" aria-hidden="true"></i>
-          </button>
-          <button class="btn-action" onclick="rewind()" aria-label="Rewind 10 seconds">
-            <i class="fas fa-backward" aria-hidden="true"></i>
-          </button>
-          <button class="btn-action" onclick="toggleAudio()" aria-label="Play or pause" id="btn-play-pause">
-            <i class="fas fa-play" id="icon-play" aria-hidden="true"></i>
-            <i class="fas fa-pause" id="icon-pause" style="display: none" aria-hidden="true"></i>
-          </button>
-          <button class="btn-action" onclick="forward()" aria-label="Forward 10 seconds">
-            <i class="fas fa-forward" aria-hidden="true"></i>
-          </button>
-          <button class="btn-action" onclick="next()" aria-label="Next track">
-            <i class="fas fa-step-forward" aria-hidden="true"></i>
-          </button>
-          <button class="btn-action" id="toggleMute" onclick="toggleMute()" aria-label="Toggle mute">
-            <i id="icon-vol-up" class="fas fa-volume-up" aria-hidden="true"></i>
-            <i id="icon-vol-mute" class="fas fa-volume-mute" style="display: none" aria-hidden="true"></i>
-          </button>
-        </div>
-        <div class="playlist-ctn" role="list" aria-label="Playlist"></div>
       </div>
     </section>
 
@@ -174,11 +194,74 @@
       </div>
     </section>
 
-    <!-- Licensing Section -->
+    <section id="about" class="about-section">
+      <div class="section-inner">
+        <h2 class="section-title">About</h2>
+        <div class="about-grid">
+          <div class="about-card">
+            <h3>Drainbow</h3>
+            <p>Drainbow channels raw energy and unfiltered expression into sound. With <em>Life Under Bittherium</em>, the boundaries between genres dissolve into something urgent and alive.</p>
+          </div>
+          <div class="about-card">
+            <h3>The Release</h3>
+            <p>This page is the release home: listen in full, buy directly, get future alerts, and move deeper into the circle if the music lands.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="community" class="community-section">
+      <div class="section-inner">
+        <h2 class="section-title">Join the Inner Circle</h2>
+        <p class="community-subtitle">Start with the drop list. Stay for the supporters, previews, and the next thing before it scatters across the feed.</p>
+        <div class="community-grid">
+          <div class="community-card">
+            <h3>Join the Drop List</h3>
+            <p>Get release alerts, updates, and direct access to whatever comes next.</p>
+            <a href="#signup" class="community-link" id="join-drop-community-link" data-capture-trigger="true" data-placement="community-drop" data-intent="drop">
+              <i class="fas fa-bolt" aria-hidden="true"></i>
+              <span>Get release alerts</span>
+            </a>
+          </div>
+          <div class="community-card">
+            <h3>Join the Discord</h3>
+            <p>Move from passive listener to real community member. Hang around for previews, conversations, and supporter-only energy.</p>
+            <a href="https://discord.gg/" class="community-link" id="discord-community-link" aria-label="Join the Discord community" target="_blank" rel="noopener noreferrer">
+              <i class="fab fa-discord" aria-hidden="true"></i>
+              <span>Enter the server</span>
+            </a>
+          </div>
+          <div class="community-card">
+            <h3>Supporter Path</h3>
+            <p>Buy direct, support above the minimum, and stay close enough to catch the next release before it disappears into the algorithm.</p>
+            <a href="#buy" class="community-link">
+              <i class="fas fa-heart" aria-hidden="true"></i>
+              <span>Support this release</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Email Signup -->
+    <section id="signup" class="signup-section">
+      <div class="section-inner">
+        <h2 class="section-title">Join the Drop</h2>
+        <p class="signup-subtitle">Get release alerts, early updates, and a direct path back to the music when the next thing lands.</p>
+        <form id="email-form" class="email-form">
+          <input type="text" id="signup-name" name="name" placeholder="your name" aria-label="Name" />
+          <input type="email" id="signup-email" name="email" placeholder="your@email.com" required aria-label="Email address" />
+          <button type="submit" class="form-submit-btn">Get Updates</button>
+        </form>
+        <p class="form-status" id="email-status"></p>
+        <p class="signup-note">No algorithmic middleman. Just release alerts, supporter news, and whatever comes next.</p>
+      </div>
+    </section>
+
     <section id="licensing" class="licensing-section">
       <div class="section-inner">
         <h2 class="section-title">Licensing &amp; Sync</h2>
-        <p class="licensing-subtitle">Use this music in your project. Film, TV, games, ads, podcasts &mdash; get in touch for rates.</p>
+        <p class="licensing-subtitle">If the record belongs in your film, show, game, ad, or project, send a note.</p>
         <form id="licensing-form" class="licensing-form">
           <div class="form-row">
             <div class="form-group">
@@ -206,64 +289,31 @@
       </div>
     </section>
 
-    <!-- About Section -->
-    <section id="about" class="about-section">
-      <div class="section-inner">
-        <h2 class="section-title">About</h2>
-        <div class="about-grid">
-          <div class="about-card">
-            <h3>DrainBow</h3>
-            <p>DrainBow channels raw energy and unfiltered expression into sound. With <em>Life Under Bittherium</em>, the boundaries between genres dissolve into something urgent and alive &mdash; music built from the ground up with no compromises.</p>
+    <div class="capture-modal hidden" id="capture-modal" aria-hidden="true">
+      <div class="capture-backdrop" data-capture-close="true"></div>
+      <div class="capture-dialog" role="dialog" aria-modal="true" aria-labelledby="capture-title">
+        <button class="capture-close" id="capture-close" aria-label="Close capture dialog">
+          <i class="fas fa-xmark" aria-hidden="true"></i>
+        </button>
+        <p class="capture-kicker">Stay close to the release</p>
+        <h2 id="capture-title">Join the Drop</h2>
+        <p class="capture-copy">Get release alerts, early updates, and a direct path back to the artist-owned lane. We will route you to the configured drop flow after capture.</p>
+        <form id="capture-form" class="capture-form">
+          <input type="hidden" id="capture-placement" name="placement" value="modal" />
+          <input type="hidden" id="capture-intent" name="intent" value="drop" />
+          <div class="capture-field">
+            <label for="capture-name">Name</label>
+            <input type="text" id="capture-name" name="name" placeholder="Your name" />
           </div>
-          <div class="about-card">
-            <h3>Hot 'n Tasty Music</h3>
-            <p>The creative imprint of Pleroma LLC. Hot 'n Tasty Music is where original sounds find their home &mdash; a platform for artists who make music that doesn't fit neatly into boxes but hits hard all the same.</p>
+          <div class="capture-field">
+            <label for="capture-email">Email</label>
+            <input type="email" id="capture-email" name="email" placeholder="you@email.com" required />
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Distribution Links Section -->
-    <section id="listen" class="listen-section">
-      <div class="section-inner">
-        <h2 class="section-title">Find Us Everywhere</h2>
-        <div class="platform-links">
-          <a href="#" class="platform-link" aria-label="Listen on Spotify" target="_blank" rel="noopener noreferrer">
-            <i class="fab fa-spotify" aria-hidden="true"></i>
-            <span>Spotify</span>
-          </a>
-          <a href="#" class="platform-link" aria-label="Listen on Apple Music" target="_blank" rel="noopener noreferrer">
-            <i class="fab fa-apple" aria-hidden="true"></i>
-            <span>Apple Music</span>
-          </a>
-          <a href="#" class="platform-link" aria-label="Listen on YouTube Music" target="_blank" rel="noopener noreferrer">
-            <i class="fab fa-youtube" aria-hidden="true"></i>
-            <span>YouTube</span>
-          </a>
-          <a href="#" class="platform-link" aria-label="Listen on SoundCloud" target="_blank" rel="noopener noreferrer">
-            <i class="fab fa-soundcloud" aria-hidden="true"></i>
-            <span>SoundCloud</span>
-          </a>
-          <a href="#" class="platform-link" aria-label="Listen on Bandcamp" target="_blank" rel="noopener noreferrer">
-            <i class="fab fa-bandcamp" aria-hidden="true"></i>
-            <span>Bandcamp</span>
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <!-- Email Signup -->
-    <section id="signup" class="signup-section">
-      <div class="section-inner">
-        <h2 class="section-title">Stay in the Loop</h2>
-        <p class="signup-subtitle">New releases, shows, and updates. No spam.</p>
-        <form id="email-form" class="email-form">
-          <input type="email" id="signup-email" name="email" placeholder="your@email.com" required aria-label="Email address" />
-          <button type="submit" class="form-submit-btn">Subscribe</button>
+          <button type="submit" class="form-submit-btn capture-submit">Continue</button>
         </form>
-        <p class="form-status" id="email-status"></p>
+        <p class="form-status" id="capture-status"></p>
       </div>
-    </section>
+    </div>
 
     <!-- Footer -->
     <footer id="contact" class="site-footer">

@@ -100,6 +100,27 @@
       .bookmark-notice strong {
         color: var(--accent-gold);
       }
+      .success-actions {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 32px;
+      }
+      .success-action-link {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 48px;
+        padding: 12px 16px;
+        border-radius: 6px;
+        border: 2px solid var(--accent-gold);
+        color: var(--accent-gold);
+        text-decoration: none;
+        font-weight: 700;
+      }
+      .success-action-link:hover {
+        background-color: var(--accent-gold);
+        color: var(--bg-primary);
+      }
     </style>
   </head>
   <body>
@@ -112,6 +133,7 @@
         <div class="bookmark-notice" id="bookmark-notice" style="display:none">
           <strong>Bookmark this page</strong> to download again later. This is your unique download link — it won't work for anyone else.
         </div>
+        <div class="success-actions" id="success-actions"></div>
         <a href="/" class="back-link">&larr; Back to Hot 'n Tasty Music</a>
       </div>
     </div>
@@ -123,6 +145,7 @@
         const statusMsg = document.getElementById('status-msg');
         const downloadList = document.getElementById('download-list');
         const bookmarkNotice = document.getElementById('bookmark-notice');
+        const actions = document.getElementById('success-actions');
 
         if (!sessionId && !token) {
           statusMsg.textContent = 'No purchase found.';
@@ -159,6 +182,13 @@
 
           statusMsg.textContent = 'Your music is ready to download.';
           bookmarkNotice.style.display = 'block';
+          if (data.libraryUrl) {
+            actions.innerHTML = `
+              <a class="success-action-link" href="${data.libraryUrl}">Open your supporter library</a>
+              <a class="success-action-link" href="/#community">Join the community</a>
+              <a class="success-action-link" href="/#signup">Get the next drop</a>
+            `;
+          }
 
           data.downloads.forEach(track => {
             const li = document.createElement('li');

@@ -14,6 +14,213 @@ if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
 const port = process.env.PORT || 3000;
+const siteConfig = {
+    cloudfrontDomain: process.env.CLOUDFRONT_DOMAIN || '',
+    layloDropUrl: process.env.LAYLO_DROP_URL || '',
+    layloProfileUrl: process.env.LAYLO_PROFILE_URL || 'https://laylo.com/laylo-drainbow',
+    discordInviteUrl: process.env.DISCORD_INVITE_URL || '',
+    artistName: process.env.ARTIST_NAME || 'Drainbow',
+    releaseTitle: process.env.RELEASE_TITLE || 'Life Under Bittherium',
+    fanCaptureMode: process.env.FAN_CAPTURE_MODE || ((process.env.LAYLO_DROP_URL || process.env.LAYLO_PROFILE_URL) ? 'laylo_redirect' : 'local'),
+    campaignId: process.env.CAMPAIGN_ID || 'life-under-bittherium-drop',
+    campaignStatus: process.env.CAMPAIGN_STATUS || 'collecting',
+    releaseDate: process.env.RELEASE_DATE || '',
+    campaignHeadline: process.env.CAMPAIGN_HEADLINE || 'Join the drop and stay close to the release.',
+    campaignGoalSignups: Number(process.env.CAMPAIGN_GOAL_SIGNUPS || 250)
+};
+
+function readJsonFile(filename, fallback = []) {
+    const file = path.join(DATA_DIR, filename);
+    try {
+        return JSON.parse(fs.readFileSync(file, 'utf8'));
+    } catch {
+        return fallback;
+    }
+}
+
+function writeJsonFile(filename, value) {
+    const file = path.join(DATA_DIR, filename);
+    fs.writeFileSync(file, JSON.stringify(value, null, 2));
+}
+
+function getDefaultCampaign() {
+    return {
+        id: siteConfig.campaignId,
+        artistName: siteConfig.artistName,
+        releaseTitle: siteConfig.releaseTitle,
+        status: siteConfig.campaignStatus,
+        releaseDate: siteConfig.releaseDate,
+        headline: siteConfig.campaignHeadline,
+        goalSignups: siteConfig.campaignGoalSignups,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    };
+}
+
+function getCampaignRecord() {
+    const campaigns = readJsonFile('drop-campaigns.json', []);
+    const existing = campaigns.find((entry) => entry.id === siteConfig.campaignId);
+    if (existing) return existing;
+
+    const created = getDefaultCampaign();
+    campaigns.push(created);
+    writeJsonFile('drop-campaigns.json', campaigns);
+    return created;
+}
+
+function saveCampaignRecord(campaign) {
+    const campaigns = readJsonFile('drop-campaigns.json', []);
+    const next = { ...campaign, updatedAt: new Date().toISOString() };
+    const index = campaigns.findIndex((entry) => entry.id === next.id);
+    if (index >= 0) {
+        campaigns[index] = next;
+    } else {
+        campaigns.push(next);
+    }
+    writeJsonFile('drop-campaigns.json', campaigns);
+    return next;
+}
+
+function getCampaignReport() {
+    const campaign = getCampaignRecord();
+    const events = readJsonFile('fan-capture-events.json', []);
+    const supporters = readJsonFile('supporters.json', []);
+    const profiles = readJsonFile('fan-profiles.json', []);
+
+    const relevantEvents = events.filter((event) => event.intent === 'drop');
+    const uniqueSignups = new Set(relevantEvents.map((event) => event.email)).size;
+    const supporterCount = supporters.filter((supporter) => (supporter.totalPurchases || 0) > 0).length;
+    const patronCount = supporters.filter((supporter) => supporter.supporterTier === 'patron').length;
+    const buyerEmails = new Set(supporters.filter((supporter) => (supporter.totalPurchases || 0) > 0).map((supporter) => supporter.email));
+    const conversionRate = uniqueSignups ? Number(((buyerEmails.size / uniqueSignups) * 100).toFixed(1)) : 0;
+
+    const placements = {};
+    relevantEvents.forEach((event) => {
+        placements[event.placement] = (placements[event.placement] || 0) + 1;
+    });
+
+    return {
+        campaign,
+        metrics: {
+            signups: uniqueSignups,
+            listeners: profiles.length,
+            buyers: buyerEmails.size,
+            supporters: supporterCount,
+            patrons: patronCount,
+            conversionRate,
+            goalProgressPct: campaign.goalSignups ? Math.min(100, Number(((uniqueSignups / campaign.goalSignups) * 100).toFixed(1))) : 0
+        },
+        placements
+    };
+}
+
+function upsertFanProfile({ email, name, source, placement, intent, fanStage, tags = [] }) {
+    if (!email) return null;
+
+    const normalizedEmail = email.toLowerCase();
+    const timestamp = new Date().toISOString();
+    const profiles = readJsonFile('fan-profiles.json', []);
+    const profile = profiles.find((entry) => entry.email === normalizedEmail) || {
+        email: normalizedEmail,
+        name: name || '',
+        firstSeenAt: timestamp,
+        lastSeenAt: timestamp,
+        artistName: siteConfig.artistName,
+        releaseTitle: siteConfig.releaseTitle,
+        signupCount: 0,
+        lastIntent: '',
+        sources: [],
+        placements: [],
+        fanStage: 'listener',
+        tags: []
+    };
+
+    profile.name = profile.name || name || '';
+    profile.lastSeenAt = timestamp;
+    profile.lastIntent = intent || profile.lastIntent || 'drop';
+    if (source && !profile.sources.includes(source)) profile.sources.push(source);
+    if (placement && !profile.placements.includes(placement)) profile.placements.push(placement);
+    if (intent === 'drop') {
+        profile.signupCount = (profile.signupCount || 0) + 1;
+    }
+    if (fanStage && ['listener', 'subscriber', 'buyer', 'supporter', 'patron'].indexOf(fanStage) > ['listener', 'subscriber', 'buyer', 'supporter', 'patron'].indexOf(profile.fanStage || 'listener')) {
+        profile.fanStage = fanStage;
+    } else if (!profile.fanStage) {
+        profile.fanStage = fanStage || 'listener';
+    }
+    tags.forEach((tag) => {
+        if (tag && !profile.tags.includes(tag)) profile.tags.push(tag);
+    });
+
+    const index = profiles.findIndex((entry) => entry.email === normalizedEmail);
+    if (index >= 0) {
+        profiles[index] = profile;
+    } else {
+        profiles.push(profile);
+    }
+    writeJsonFile('fan-profiles.json', profiles);
+    return profile;
+}
+
+function upsertSupporterProfile({ email, name, source, purchase }) {
+    if (!email) return null;
+
+    const normalizedEmail = email.toLowerCase();
+    const timestamp = new Date().toISOString();
+    const supporters = readJsonFile('supporters.json', []);
+    const supporter = supporters.find((entry) => entry.email === normalizedEmail) || {
+        email: normalizedEmail,
+        name: name || '',
+        firstSeenAt: timestamp,
+        lastSeenAt: timestamp,
+        artistName: siteConfig.artistName,
+        releaseTitle: siteConfig.releaseTitle,
+        supporterTier: 'listener',
+        totalPurchases: 0,
+        totalSpendCents: 0,
+        purchases: [],
+        sources: []
+    };
+
+    supporter.name = supporter.name || name || '';
+    supporter.lastSeenAt = timestamp;
+    if (source && !supporter.sources.includes(source)) supporter.sources.push(source);
+
+    if (purchase) {
+        const existingPurchase = supporter.purchases.find((entry) => entry.sessionId === purchase.sessionId);
+        if (!existingPurchase) {
+            supporter.purchases.push(purchase);
+            supporter.totalPurchases += 1;
+            supporter.totalSpendCents += purchase.amountCents || 0;
+        }
+    }
+
+    if (supporter.totalSpendCents >= 2000 || supporter.totalPurchases >= 2) {
+        supporter.supporterTier = 'supporter';
+    }
+    if (supporter.totalSpendCents >= 5000) {
+        supporter.supporterTier = 'patron';
+    }
+
+    const existingIndex = supporters.findIndex((entry) => entry.email === normalizedEmail);
+    if (existingIndex >= 0) {
+        supporters[existingIndex] = supporter;
+    } else {
+        supporters.push(supporter);
+    }
+
+    writeJsonFile('supporters.json', supporters);
+    upsertFanProfile({
+        email: normalizedEmail,
+        name,
+        source,
+        placement: 'purchase',
+        intent: 'support',
+        fanStage: supporter.supporterTier === 'patron' ? 'patron' : (supporter.supporterTier === 'supporter' ? 'supporter' : 'buyer'),
+        tags: ['buyer', supporter.supporterTier]
+    });
+    return supporter;
+}
 
 console.log(`Starting server [${process.env.NODE_ENV || 'development'}] on port ${port}`);
 
@@ -173,6 +380,125 @@ async function fetchMusicMetadata(req, res) {
 
 app.get('/get-music-metadata', fetchMusicMetadata);
 app.get('/list-music', fetchMusicMetadata);
+app.get('/api/site-config', (req, res) => {
+    res.json({
+        ...siteConfig,
+        campaign: getCampaignReport().campaign
+    });
+});
+
+app.get('/api/drop-campaign', (req, res) => {
+    res.json(getCampaignReport());
+});
+
+app.post('/api/drop-campaign', (req, res) => {
+    const body = req.body || {};
+    const current = getCampaignRecord();
+    const updated = saveCampaignRecord({
+        ...current,
+        status: body.status || current.status,
+        releaseDate: body.releaseDate || current.releaseDate,
+        headline: body.headline || current.headline,
+        goalSignups: Number(body.goalSignups || current.goalSignups || 0)
+    });
+    res.json({ campaign: updated });
+});
+
+app.post('/api/fan-capture', (req, res) => {
+    const {
+        email,
+        name,
+        source,
+        placement,
+        intent,
+        utmSource,
+        utmMedium,
+        utmCampaign
+    } = req.body || {};
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ error: 'Valid email required' });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+    const timestamp = new Date().toISOString();
+    const layloTarget = siteConfig.layloDropUrl || siteConfig.layloProfileUrl || '';
+    const nextUrl = layloTarget
+        ? `${layloTarget}${layloTarget.includes('?') ? '&' : '?'}utm_source=${encodeURIComponent(utmSource || 'darealmusic')}&utm_medium=${encodeURIComponent(utmMedium || 'owned-site')}&utm_campaign=${encodeURIComponent(utmCampaign || 'join-the-drop')}&email=${encodeURIComponent(normalizedEmail)}`
+        : '';
+
+    const events = readJsonFile('fan-capture-events.json', []);
+    const subscribers = readJsonFile('subscribers.json', []);
+    const campaign = getCampaignRecord();
+
+    const profile = upsertFanProfile({
+        email: normalizedEmail,
+        name,
+        source: source || 'site',
+        placement: placement || 'unknown',
+        intent: intent || 'drop',
+        fanStage: 'subscriber',
+        tags: ['drop-subscriber', campaign.id]
+    });
+
+    if (!subscribers.some((subscriber) => subscriber.email === normalizedEmail)) {
+        subscribers.push({
+            email: normalizedEmail,
+            name: name || '',
+            source: source || 'site',
+            placement: placement || 'unknown',
+            date: timestamp
+        });
+    }
+
+    events.push({
+        id: crypto.randomUUID(),
+        email: normalizedEmail,
+        name: name || '',
+        source: source || 'site',
+        placement: placement || 'unknown',
+        intent: intent || 'drop',
+        utmSource: utmSource || 'darealmusic',
+        utmMedium: utmMedium || 'owned-site',
+        utmCampaign: utmCampaign || 'join-the-drop',
+        mode: siteConfig.fanCaptureMode,
+        nextUrl,
+        referrer: req.get('referer') || '',
+        userAgent: req.get('user-agent') || '',
+            timestamp
+        });
+
+    writeJsonFile('fan-capture-events.json', events);
+    writeJsonFile('subscribers.json', subscribers);
+
+    return res.json({
+        message: nextUrl ? 'Capture saved. Continue to the drop.' : 'You are in the loop.',
+        nextUrl,
+        mode: siteConfig.fanCaptureMode,
+        profile,
+        campaign: getCampaignReport().campaign
+    });
+});
+
+app.get('/api/fan-capture-report', (req, res) => {
+    const profiles = readJsonFile('fan-profiles.json', []);
+    const events = readJsonFile('fan-capture-events.json', []);
+    const sourceCounts = {};
+    const placementCounts = {};
+
+    events.forEach((event) => {
+        sourceCounts[event.source] = (sourceCounts[event.source] || 0) + 1;
+        placementCounts[event.placement] = (placementCounts[event.placement] || 0) + 1;
+    });
+
+    res.json({
+        fans: profiles.length,
+        captureEvents: events.length,
+        sourceCounts,
+        placementCounts,
+        latestEventAt: events.length ? events[events.length - 1].timestamp : null
+    });
+});
 
 // Email signup
 app.post('/api/subscribe', (req, res) => {
@@ -181,16 +507,14 @@ app.post('/api/subscribe', (req, res) => {
         return res.status(400).json({ error: 'Valid email required' });
     }
 
-    const file = path.join(DATA_DIR, 'subscribers.json');
-    let subscribers = [];
-    try { subscribers = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
+    const subscribers = readJsonFile('subscribers.json', []);
 
     if (subscribers.some(s => s.email === email)) {
         return res.json({ message: 'Already subscribed' });
     }
 
     subscribers.push({ email, date: new Date().toISOString() });
-    fs.writeFileSync(file, JSON.stringify(subscribers, null, 2));
+    writeJsonFile('subscribers.json', subscribers);
     res.json({ message: 'Subscribed' });
 });
 
@@ -201,12 +525,10 @@ app.post('/api/licensing', (req, res) => {
         return res.status(400).json({ error: 'Email and message required' });
     }
 
-    const file = path.join(DATA_DIR, 'licensing-inquiries.json');
-    let inquiries = [];
-    try { inquiries = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
+    const inquiries = readJsonFile('licensing-inquiries.json', []);
 
     inquiries.push({ name, email, project, message, date: new Date().toISOString() });
-    fs.writeFileSync(file, JSON.stringify(inquiries, null, 2));
+    writeJsonFile('licensing-inquiries.json', inquiries);
     res.json({ message: 'Inquiry received' });
 });
 
@@ -316,9 +638,7 @@ async function getDownloadLinks(type, trackName, token) {
 // Generate a unique download token and save the purchase
 function createPurchaseToken(email, type, trackName, sessionId) {
     const token = crypto.randomBytes(32).toString('hex');
-    const file = path.join(DATA_DIR, 'purchases.json');
-    let purchases = [];
-    try { purchases = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
+    const purchases = readJsonFile('purchases.json', []);
 
     // If this session already has a token, return it
     const existing = purchases.find(p => p.sessionId === sessionId);
@@ -332,7 +652,7 @@ function createPurchaseToken(email, type, trackName, sessionId) {
         sessionId,
         date: new Date().toISOString()
     });
-    fs.writeFileSync(file, JSON.stringify(purchases, null, 2));
+    writeJsonFile('purchases.json', purchases);
     return token;
 }
 
@@ -353,12 +673,32 @@ app.get('/api/download', async (req, res) => {
         }
 
         const type = session.metadata.type;
+        const amountCents = session.amount_total || 0;
         const token = createPurchaseToken(
             session.customer_details?.email, type, session.metadata.trackName, session.id
         );
         const downloads = await getDownloadLinks(type, session.metadata.trackName, token);
+        const supporter = upsertSupporterProfile({
+            email: session.customer_details?.email || '',
+            name: session.customer_details?.name || '',
+            source: 'stripe-checkout',
+            purchase: {
+                sessionId: session.id,
+                token,
+                type,
+                trackName: session.metadata.trackName || '',
+                amountCents,
+                purchasedAt: new Date().toISOString()
+            }
+        });
 
-        res.json({ downloads, token, type: type === 'single' ? 'single' : 'album' });
+        res.json({
+            downloads,
+            token,
+            type: type === 'single' ? 'single' : 'album',
+            supporter,
+            libraryUrl: token ? `/library.html?token=${token}` : ''
+        });
     } catch (error) {
         console.error('Download verification error:', error.message);
         res.status(500).json({ error: 'Failed to verify purchase' });
@@ -373,9 +713,7 @@ app.get('/api/redownload', async (req, res) => {
             return res.status(400).json({ error: 'Missing download token' });
         }
 
-        const file = path.join(DATA_DIR, 'purchases.json');
-        let purchases = [];
-        try { purchases = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
+        const purchases = readJsonFile('purchases.json', []);
 
         const purchase = purchases.find(p => p.token === token);
         if (!purchase) {
@@ -383,10 +721,49 @@ app.get('/api/redownload', async (req, res) => {
         }
 
         const downloads = await getDownloadLinks(purchase.type, purchase.trackName, token);
-        res.json({ downloads });
+        const supporters = readJsonFile('supporters.json', []);
+        const supporter = supporters.find((entry) => entry.email === purchase.email) || null;
+        res.json({
+            downloads,
+            purchase,
+            supporter,
+            libraryUrl: `/library.html?token=${token}`
+        });
     } catch (error) {
         console.error('Redownload error:', error.message);
         res.status(500).json({ error: 'Failed to look up purchase' });
+    }
+});
+
+app.get('/api/supporter-library', async (req, res) => {
+    try {
+        const { token } = req.query;
+        if (!token) {
+            return res.status(400).json({ error: 'Missing supporter token' });
+        }
+
+        const purchases = readJsonFile('purchases.json', []);
+        const purchase = purchases.find((entry) => entry.token === token);
+        if (!purchase) {
+            return res.status(404).json({ error: 'Invalid supporter token' });
+        }
+
+        const supporters = readJsonFile('supporters.json', []);
+        const supporter = supporters.find((entry) => entry.email === purchase.email);
+        const downloads = await Promise.all((supporter?.purchases || []).map(async (entry) => ({
+            ...entry,
+            downloads: await getDownloadLinks(entry.type, entry.trackName, entry.token)
+        })));
+
+        res.json({
+            supporter: supporter || null,
+            downloads,
+            discordInviteUrl: siteConfig.discordInviteUrl || '',
+            layloDropUrl: siteConfig.layloDropUrl || siteConfig.layloProfileUrl || ''
+        });
+    } catch (error) {
+        console.error('Supporter library error:', error.message);
+        res.status(500).json({ error: 'Failed to build supporter library' });
     }
 });
 
@@ -400,9 +777,7 @@ app.get('/api/download-file', async (req, res) => {
         }
 
         // Verify the token is valid
-        const purchasesFile = path.join(DATA_DIR, 'purchases.json');
-        let purchases = [];
-        try { purchases = JSON.parse(fs.readFileSync(purchasesFile, 'utf8')); } catch {}
+        const purchases = readJsonFile('purchases.json', []);
 
         const purchase = purchases.find(p => p.token === token);
         if (!purchase) {

@@ -57,7 +57,7 @@ jobs:
             ExecStart=/opt/bitnami/node/bin/node index.js
             Restart=on-failure
             Environment=NODE_ENV=production
-            Environment=AWS_REGION=us-east-1
+            Environment=AWS_REGION=us-east-2
             Environment=AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
             Environment=AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
             Environment=S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
@@ -65,6 +65,8 @@ jobs:
             Environment=API_URL=${{ secrets.API_URL }}
             Environment=STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
             Environment=STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+            Environment=ARTIST_NAME=Drainbow
+            Environment=LAYLO_PROFILE_URL=https://laylo.com/laylo-drainbow
 
             [Install]
             WantedBy=multi-user.target
@@ -78,7 +80,7 @@ jobs:
             CLOUDFRONT_DOMAIN=$(echo "${{ secrets.CLOUDFRONT_DOMAIN }}" | sed 's|^https://||')
             cat > /opt/bitnami/apps/music-player/.env << 'EOL'
             NODE_ENV=production
-            AWS_REGION=us-east-1
+            AWS_REGION=us-east-2
             AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
             AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
             S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
@@ -86,6 +88,8 @@ jobs:
             API_URL=${{ secrets.API_URL }}
             STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
             STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+            ARTIST_NAME=Drainbow
+            LAYLO_PROFILE_URL=https://laylo.com/laylo-drainbow
             EOL
             chmod 600 /opt/bitnami/apps/music-player/.env
 
